@@ -76,7 +76,7 @@ function ModalCita({ doctor, onCerrar }) {
 
 function Hero() {
   return (
-    <section className="relative min-h-[600px] flex items-center overflow-hidden">
+    <section className="relative min-h-150 flex items-center overflow-hidden">
 
       {/* Imagen ocupa todo el hero */}
       <img
@@ -136,7 +136,7 @@ function DoctoresDestacados() {
           {doctoresOrdenados.map((doctor) => (
             <div
               key={doctor.id}
-              className="min-w-64 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden snap-start flex-shrink-0"
+              className="min-w-64 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden snap-start shrink-0"
             >
               <div className="relative">
                 <img
@@ -295,7 +295,7 @@ function DoctorDelMes() {
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 flex flex-col md:flex-row gap-6 items-center border border-white/40 shadow-lg">
 
           {/* Foto con corona */}
-          <div className="relative flex-shrink-0">
+          <div className="relative shrink-0">
             <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">👑</span>
             <img
               src={doctor.imagen}
@@ -322,7 +322,7 @@ function DoctorDelMes() {
           </div>
 
            {/* CTA */}
-          <div className="flex flex-col gap-3 flex-shrink-0">
+          <div className="flex flex-col gap-3 shrink-0">
             <div className="bg-white/10 rounded-2xl p-4 text-center border border-white/20">
               <p className="text-sky-400 text-xs mb-1">Consulta desde</p>
               <p className="text-3xl font-bold text-gray-800">${doctor.precio}</p>

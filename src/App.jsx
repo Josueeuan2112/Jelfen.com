@@ -7,6 +7,10 @@ import Home from './pages/Home'
 import DoctorSearch from './pages/DoctorSearch'
 import DoctorRegister from './pages/DoctorRegister'
 import DoctorProfile from './pages/DoctorProfile'
+import Contacto from './pages/Contacto'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+
 
 function App() {
   return (
@@ -18,6 +22,9 @@ function App() {
         <Route path="/buscar" element={<DoctorSearch />} />
         <Route path="/registro" element={<DoctorRegister />} />
         <Route path="/doctor/:id" element={<DoctorProfile />} />
+        <Route path="/contacto" element={<Contacto />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
       <Footer />
       <ChatBot />

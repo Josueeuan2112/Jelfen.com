@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 // --- HERO ---
 function HeroNosotros() {
   return (
-    <section className="relative min-h-[600px] flex items-center overflow-hidden">
+    <section className="relative min-h-150 flex items-center overflow-hidden">
 
       {/* Imagen ocupa todo el hero */}
       <img
@@ -29,7 +29,7 @@ function HeroNosotros() {
         </p>
         <div className="flex gap-4 flex-wrap justify-start">
           <Link to="/doctores" className="bg-sky-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-sky-600 shadow-md transition">
-            Encontrar un Doctor
+            Soy paciente
           </Link>
           <Link to="/registro" className="border-2 border-sky-500 text-sky-500 bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full text-lg font-semibold hover:bg-white transition">
             Soy Médico
