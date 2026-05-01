@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 function Navbar() {
   return (
-    <nav className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+    <nav className="bg-sky-50 shadow-sm px-6 py-4 flex items-center justify-between">
 
       {/* Logo */}
       <Link to="/" className="text-2xl font-bold text-sky-500">
@@ -12,7 +12,8 @@ function Navbar() {
       {/* Links del centro */}
       <div className="flex gap-6 text-gray-600 font-medium">
         <Link to="/" className="hover:text-sky-500">Principal</Link>
-        <Link to="/buscar" className="hover:text-sky-500">Buscar Doctor</Link>
+        <Link to="/doctores" className="hover:text-sky-500">Doctores</Link>
+
       </div>
 
       {/* Botones de la derecha */}
@@ -29,4 +30,6 @@ function Navbar() {
   )
 }
 
+//en la linea 15 debe ir el navbar de buscar doctores pero lo oculte para que se vea en el hero de doctores
+ //       <Link to="/buscar" className="hover:text-sky-500">Buscar Doctor</Link>
 export default Navbar

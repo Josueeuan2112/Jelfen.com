@@ -105,10 +105,12 @@ function HeaderDoctor({ doctor, onAgendar }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-8 flex flex-col md:flex-row gap-6 items-start">
 
-      {/* Foto */}
-      <div className="w-28 h-28 bg-sky-100 rounded-2xl flex items-center justify-center text-5xl flex-shrink-0">
-        👨‍⚕️
-      </div>
+     {/* Foto */}
+<img
+  src={doctor.imagen}
+  alt={doctor.nombre}
+  className="w-40 h-50 rounded-2xl object-cover object-top flex-shrink-0"
+/>
 
       {/* Info principal */}
       <div className="flex-1">

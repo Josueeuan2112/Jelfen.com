@@ -2,6 +2,10 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { doctores } from '../utils/doctores'
 
+
+
+// ---PAGINA DE DOCTORES DESTACADOS--- 
+
 function ModalCita({ doctor, onCerrar }) {
   const [paso, setPaso] = useState(1)
   const [fecha, setFecha] = useState('')
@@ -72,20 +76,38 @@ function ModalCita({ doctor, onCerrar }) {
 
 function Hero() {
   return (
-    <section className="bg-gradient-to-br from-sky-50 to-blue-100 py-20 px-6 text-center">
-      <h1 className="text-5xl font-bold text-gray-800 mb-4">
-        Consultas Médicas en Línea <br />
-        <span className="text-sky-500">con los Mejores Doctores</span>
-      </h1>
-      <p className="text-gray-500 text-xl mb-8">Tu salud en buenas manos, estés donde estés.</p>
-      <div className="flex gap-4 justify-center flex-wrap">
-        <Link to="/buscar" className="bg-sky-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-sky-600">
-          Encontrar un Doctor
-        </Link>
-        <Link to="/registro" className="border-2 border-sky-500 text-sky-500 px-8 py-3 rounded-full text-lg font-semibold hover:bg-sky-50">
-          Soy Médico
-        </Link>
+    <section className="relative min-h-[600px] flex items-center overflow-hidden">
+
+      {/* Imagen ocupa todo el hero */}
+      <img
+        src="/hero-doctors.png"
+        alt="Médicos Jelfen"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+      />
+
+      {/* Texto encima — pegado a la derecha */}
+      <div className="relative z-10 ml-auto mr-10 md:mr-20 py-24 max-w-lg text-right">
+        <span className="bg-white/80 text-sky-600 text-xs font-bold px-4 py-2 rounded-full tracking-widest uppercase mb-6 inline-block backdrop-blur-sm">
+          ✅ Médicos verificados ante la SEP
+        </span>
+        <h1 className="text-5xl font-bold text-gray-800 mb-4 leading-tight">
+          Consultas Médicas <br />
+          en Línea con los <br />
+          <span className="text-sky-500">Mejores Doctores</span>
+        </h1>
+        <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+          Tu salud en buenas manos, estés donde estés. Agenda en minutos, sin filas ni esperas.
+        </p>
+        <div className="flex gap-4 flex-wrap justify-end">
+          <Link to="/buscar" className="bg-sky-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-sky-600 shadow-md transition">
+            Encontrar un Doctor
+          </Link>
+          <Link to="/registro" className="border-2 border-sky-500 text-sky-500 bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full text-lg font-semibold hover:bg-white transition">
+            Soy Médico
+          </Link>
+        </div>
       </div>
+
     </section>
   )
 }
@@ -96,7 +118,7 @@ function DoctoresDestacados() {
   const doctoresOrdenados = [...doctores].sort((a, b) => b.calificacion - a.calificacion)
 
   return (
-    <section className="py-16 px-6 bg-white">
+    <section className="py-16 px-6 bg-sky-50">
       {doctorSeleccionado && (
         <ModalCita doctor={doctorSeleccionado} onCerrar={() => setDoctorSeleccionado(null)} />
       )}
@@ -187,10 +209,144 @@ function PorQueJelfen() {
   )
 }
 
+function ComoFunciona() {
+  const pasos = [
+    {
+      numero: '01',
+      icono: '🔍',
+      titulo: 'Busca tu doctor',
+      descripcion: 'Filtra por especialidad, modalidad y precio. Todos los médicos están verificados ante la SEP.',
+    },
+    {
+      numero: '02',
+      icono: '📅',
+      titulo: 'Agenda tu cita',
+      descripcion: 'Elige el día y horario que más te convenga. Presencial o videoconsulta desde cualquier lugar.',
+    },
+    {
+      numero: '03',
+      icono: '💳',
+      titulo: 'Paga de forma segura',
+      descripcion: 'Pago 100% seguro dentro de la plataforma. Sin efectivo, sin sorpresas.',
+    },
+    {
+      numero: '04',
+      icono: '✅',
+      titulo: 'Recibe tu consulta',
+      descripcion: 'Conéctate a tu videoconsulta o acude al consultorio. Tu salud, en buenas manos.',
+    },
+  ]
+
+  return (
+    <section className="py-16 px-6 bg-white">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-800 mb-3">¿Cómo funciona Jelfen?</h2>
+          <p className="text-gray-500">Agenda tu consulta en menos de 3 minutos</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {pasos.map((paso, index) => (
+            <div key={index} className="relative flex flex-col items-center text-center">
+
+              {/* Línea conectora entre pasos */}
+              {index < pasos.length - 1 && (
+                <div className="hidden md:block absolute top-8 left-1/2 w-full h-0.5 bg-sky-100 z-0" />
+              )}
+
+              {/* Círculo con número */}
+              <div className="relative z-10 w-16 h-16 bg-sky-500 text-white rounded-full flex items-center justify-center text-2xl mb-4 shadow-md">
+                {paso.icono}
+              </div>
+
+              <span className="text-xs font-bold text-sky-400 tracking-widest mb-1">PASO {paso.numero}</span>
+              <h3 className="font-bold text-gray-800 mb-2">{paso.titulo}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{paso.descripcion}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Link to="/buscar" className="bg-sky-500 text-white px-10 py-3 rounded-full text-lg font-semibold hover:bg-sky-600 transition">
+            Buscar Doctor Ahora
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// --- DOCTOR DEL MES ---
+function DoctorDelMes() {
+  const doctor = doctores[0]
+
+  return (
+    <section className="py-12 px-6 bg-sky-50">
+      <div className="max-w-5xl mx-auto">
+
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">🏆</span>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Doctor del Mes</h2>
+            <p className="text-sky-400 text-sm">El médico más valorado por los pacientes en abril 2026</p>
+          </div>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 flex flex-col md:flex-row gap-6 items-center border border-white/40 shadow-lg">
+
+          {/* Foto con corona */}
+          <div className="relative flex-shrink-0">
+            <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-3xl">👑</span>
+            <img
+              src={doctor.imagen}
+              alt={doctor.nombre}
+              className="w-28 h-28 rounded-2xl object-cover object-top border-4 border-yellow-400 shadow-lg"
+            />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 text-center md:text-left">
+            <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-2">
+              <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">🏆 Doctor del Mes</span>
+              <span className="bg-green-600/30 text-gray-800 text-xs font-bold px-3 py-1 rounded-full">✅ Verificado SEP</span>
+              <span className="bg-blue-400/30 text-gray-800 text-xs font-bold px-3 py-1 rounded-full">🔵 Especialista</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800">{doctor.nombre}</h3>
+            <p className="text-sky-400 mb-3">{doctor.especialidad} · {doctor.experiencia} años de experiencia</p>
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm text-gray-600 mb-4">
+              <span>⭐ {doctor.calificacion} calificación</span>
+              <span>💬 {doctor.resenas}+ reseñas</span>
+              <span>📍 {doctor.ubicacion}</span>
+            </div>
+            <p className="text-gray-600 text-sm leading-relaxed max-w-lg">{doctor.biografia}</p>
+          </div>
+
+           {/* CTA */}
+          <div className="flex flex-col gap-3 flex-shrink-0">
+            <div className="bg-white/10 rounded-2xl p-4 text-center border border-white/20">
+              <p className="text-sky-400 text-xs mb-1">Consulta desde</p>
+              <p className="text-3xl font-bold text-gray-800">${doctor.precio}</p>
+              <p className="text-sky-400 text-xs">MXN</p>
+            </div>
+            <Link
+              to={`/doctor/${doctor.id}`}
+              className="bg-gray-175 text-sky-600 px-6 py-3 rounded-xl font-semibold hover:bg-sky-50 transition text-center text-sm"
+            >
+              Ver Perfil Completo
+            </Link>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function Home() {
   return (
     <div>
       <Hero />
+      <DoctorDelMes />
       <DoctoresDestacados />
       <PorQueJelfen />
     </div>
