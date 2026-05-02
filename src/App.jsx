@@ -10,6 +10,7 @@ import DoctorProfile from './pages/DoctorProfile'
 import Contacto from './pages/Contacto'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import NotFound from './pages/NotFound'
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />
       <ChatBot />

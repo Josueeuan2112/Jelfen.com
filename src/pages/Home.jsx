@@ -1,110 +1,138 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { doctores } from '../utils/doctores'
-
+import { detectarEspecialidad } from '../utils/sintomas'
+import ModalCita from '../components/ModalCita'
 
 
 // ---PAGINA DE DOCTORES DESTACADOS--- 
 
-function ModalCita({ doctor, onCerrar }) {
-  const [paso, setPaso] = useState(1)
-  const [fecha, setFecha] = useState('')
-  const [hora, setHora] = useState('')
-  const [tipo, setTipo] = useState('')
-  const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00']
-  const confirmar = () => { if (!fecha || !hora || !tipo) return; setPaso(2) }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="bg-sky-500 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-          <div><p className="font-bold">Reservar Cita</p><p className="text-sky-100 text-sm">{doctor.nombre}</p></div>
-          <button onClick={onCerrar} className="text-white text-xl">✕</button>
-        </div>
-        <div className="p-6">
-          {paso === 1 && (
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Tipo de consulta</label>
-                <div className="flex gap-3">
-                  {(doctor.modalidad === 'videoconsulta' || doctor.modalidad === 'ambas') && (
-                    <button onClick={() => setTipo('videoconsulta')} className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'videoconsulta' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}>💻 Videoconsulta</button>
-                  )}
-                  {(doctor.modalidad === 'presencial' || doctor.modalidad === 'ambas') && (
-                    <button onClick={() => setTipo('presencial')} className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'presencial' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}>🏥 Presencial</button>
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Fecha</label>
-                <input type="date" value={fecha} min={new Date().toISOString().split('T')[0]} onChange={(e) => setFecha(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-gray-600" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Horario disponible</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {horas.map((h) => (
-                    <button key={h} onClick={() => setHora(h)} className={`py-2 rounded-lg text-sm border transition ${hora === h ? 'bg-sky-500 text-white border-sky-500' : 'border-gray-200 text-gray-600 hover:border-sky-300'}`}>{h}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-sky-50 rounded-xl p-4 flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Costo de consulta</span>
-                <span className="font-bold text-gray-800 text-lg">${doctor.precio} MXN</span>
-              </div>
-              <button onClick={confirmar} disabled={!fecha || !hora || !tipo} className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-40 disabled:cursor-not-allowed">Confirmar Cita</button>
-            </div>
-          )}
-          {paso === 2 && (
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🎉</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">¡Cita agendada!</h3>
-              <div className="bg-sky-50 rounded-xl p-4 text-left text-sm text-gray-600 mb-6 flex flex-col gap-2">
-                <p><span className="font-semibold">Doctor:</span> {doctor.nombre}</p>
-                <p><span className="font-semibold">Fecha:</span> {fecha}</p>
-                <p><span className="font-semibold">Hora:</span> {hora}</p>
-                <p><span className="font-semibold">Tipo:</span> {tipo}</p>
-                <p><span className="font-semibold">Costo:</span> ${doctor.precio} MXN</p>
-              </div>
-              <button onClick={onCerrar} className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600">Cerrar</button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function Hero() {
-  return (
-    <section className="relative min-h-150 flex items-center overflow-hidden">
+  const navigate = useNavigate()
+  const [busqueda, setBusqueda] = useState('')
+  const [sugerencia, setSugerencia] = useState(null)
+  const [enfocado, setEnfocado] = useState(false)
 
-      {/* Imagen ocupa todo el hero */}
+  const handleInput = (e) => {
+    const valor = e.target.value
+    setBusqueda(valor)
+    if (valor.length > 2) {
+      setSugerencia(detectarEspecialidad(valor))
+    } else {
+      setSugerencia(null)
+    }
+  }
+
+  const irAlEspecialista = (especialidad) => {
+    navigate(`/buscar?especialidad=${encodeURIComponent(especialidad)}`)
+  }
+
+  const handleBuscar = () => {
+    if (sugerencia) {
+      irAlEspecialista(sugerencia.especialidad)
+    } else if (busqueda.trim()) {
+      navigate('/buscar')
+    }
+  }
+
+  const chips = [
+    'Me duele la cabeza',
+    'Tengo fiebre',
+    'Me duele la espalda',
+    'Problemas de piel',
+    'Ansiedad',
+    'Mi hijo está enfermo',
+  ]
+
+  return (
+    <section className="relative min-h-[600px] flex items-center overflow-hidden">
+
+      {/* Imagen de fondo sin overlay */}
       <img
         src="/hero-doctors.png"
         alt="Médicos Jelfen"
         className="absolute inset-0 w-full h-full object-cover object-center"
       />
 
-      {/* Texto encima — pegado a la derecha */}
-      <div className="relative z-10 ml-auto mr-10 md:mr-20 py-24 max-w-lg text-right">
-        <span className="bg-white/80 text-sky-600 text-xs font-bold px-4 py-2 rounded-full tracking-widest uppercase mb-6 inline-block backdrop-blur-sm">
-          ✅ Médicos verificados ante la SEP
-        </span>
-        <h1 className="text-5xl font-bold text-gray-800 mb-4 leading-tight">
-          Consultas Médicas <br />
-          en Línea con los <br />
-          <span className="text-sky-500">Mejores Doctores</span>
-        </h1>
-        <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-          Tu salud en buenas manos, estés donde estés. Agenda en minutos, sin filas ni esperas.
-        </p>
-        <div className="flex gap-4 flex-wrap justify-end">
-          <Link to="/buscar" className="bg-sky-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-sky-600 shadow-md transition">
-            Encontrar un Doctor
-          </Link>
-          <Link to="/registro" className="border-2 border-sky-500 text-sky-500 bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full text-lg font-semibold hover:bg-white transition">
-            Soy Médico
-          </Link>
+      {/* Contenido — pegado a la derecha */}
+      <div className="relative z-10 ml-auto mr-8 md:mr-16 py-12 w-full max-w-lg">
+
+        <div className=" backdrop-blur-md rounded-3xl shadow-xl p-8">
+
+          <span className="bg-sky-100 text-sky-600 text-xs font-bold px-4 py-2 rounded-full tracking-widest uppercase mb-4 inline-block">
+            ✅ Médicos verificados ante la SEP
+          </span>
+
+          <h1 className="text-3xl font-bold text-gray-800 mb-2 leading-tight">
+            ¿Qué síntomas tienes hoy?
+          </h1>
+          <p className="text-gray-500 mb-6 text-sm">
+            Describe lo que sientes y te decimos con qué especialista ir
+          </p>
+
+          {/* Buscador */}
+          <div className="relative mb-4">
+            <div className={`flex items-center bg-white rounded-xl shadow border-2 transition ${enfocado ? 'border-sky-400' : 'border-gray-200'}`}>
+              <span className="pl-4 text-xl">🔍</span>
+              <input
+                type="text"
+                value={busqueda}
+                onChange={handleInput}
+                onFocus={() => setEnfocado(true)}
+                onBlur={() => setTimeout(() => setEnfocado(false), 150)}
+                onKeyDown={(e) => e.key === 'Enter' && handleBuscar()}
+                placeholder="Ej: me duele la cabeza..."
+                className="flex-1 px-3 py-3 bg-transparent focus:outline-none text-gray-700 text-sm"
+              />
+              <button
+                onClick={handleBuscar}
+                className="m-1.5 bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-sky-600 transition flex-shrink-0"
+              >
+                Buscar
+              </button>
+            </div>
+
+            {/* Sugerencia detectada */}
+            {sugerencia && enfocado && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-sky-100 p-4 z-20">
+                <p className="text-xs text-gray-400 mb-2 uppercase tracking-wider font-semibold">
+                  Especialista recomendado
+                </p>
+                <button
+                  onMouseDown={() => irAlEspecialista(sugerencia.especialidad)}
+                  className="w-full flex items-center gap-3 bg-sky-50 hover:bg-sky-100 rounded-xl p-3 transition"
+                >
+                  <span className="text-3xl">{sugerencia.emoji}</span>
+                  <div className="text-left flex-1">
+                    <p className="font-bold text-gray-800">{sugerencia.especialidad}</p>
+                    <p className="text-gray-500 text-xs">{sugerencia.descripcion}</p>
+                    <p className="text-sky-500 text-xs font-semibold mt-1">
+                      Ver {doctores.filter(d => d.especialidad === sugerencia.especialidad).length} especialistas →
+                    </p>
+                  </div>
+                  <span className="text-sky-400">→</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Chips */}
+          <div className="flex flex-wrap gap-2">
+            <p className="text-gray-400 text-xs w-full mb-1">Búsquedas frecuentes:</p>
+            {chips.map((chip, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setBusqueda(chip)
+                  setSugerencia(detectarEspecialidad(chip))
+                }}
+                className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-full text-xs hover:border-sky-400 hover:text-sky-600 hover:bg-sky-50 transition shadow-sm"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+
         </div>
       </div>
 

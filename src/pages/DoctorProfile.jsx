@@ -1,87 +1,24 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { doctores } from '../utils/doctores'
+import ModalCita from '../components/ModalCita'
 
-function ModalCita({ doctor, onCerrar }) {
-  const [paso, setPaso] = useState(1)
-  const [fecha, setFecha] = useState('')
-  const [hora, setHora] = useState('')
-  const [tipo, setTipo] = useState('')
+function obtenerFechas() {
+  const hoy = new Date()
+  const manana = new Date(hoy)
+  manana.setDate(hoy.getDate() + 1)
+  const pasado = new Date(hoy)
+  pasado.setDate(hoy.getDate() + 2)
 
-  const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00']
+  const formatear = (fecha) => fecha.toLocaleDateString('es-MX', {
+    weekday: 'short', day: 'numeric', month: 'short'
+  })
 
-  const confirmar = () => {
-    if (!fecha || !hora || !tipo) return
-    setPaso(2)
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="bg-sky-500 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-          <div>
-            <p className="font-bold">Reservar Cita</p>
-            <p className="text-sky-100 text-sm">{doctor.nombre}</p>
-          </div>
-          <button onClick={onCerrar} className="text-white text-xl hover:text-sky-200">✕</button>
-        </div>
-        <div className="p-6">
-          {paso === 1 && (
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Tipo de consulta</label>
-                <div className="flex gap-3">
-                  {(doctor.modalidad === 'videoconsulta' || doctor.modalidad === 'ambas') && (
-                    <button onClick={() => setTipo('videoconsulta')} className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'videoconsulta' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}>
-                      💻 Videoconsulta
-                    </button>
-                  )}
-                  {(doctor.modalidad === 'presencial' || doctor.modalidad === 'ambas') && (
-                    <button onClick={() => setTipo('presencial')} className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'presencial' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}>
-                      🏥 Presencial
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Fecha</label>
-                <input type="date" value={fecha} min={new Date().toISOString().split('T')[0]} onChange={(e) => setFecha(e.target.value)} className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-gray-600" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Horario disponible</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {horas.map((h) => (
-                    <button key={h} onClick={() => setHora(h)} className={`py-2 rounded-lg text-sm border transition ${hora === h ? 'bg-sky-500 text-white border-sky-500' : 'border-gray-200 text-gray-600 hover:border-sky-300'}`}>{h}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-sky-50 rounded-xl p-4 flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Costo de consulta</span>
-                <span className="font-bold text-gray-800 text-lg">${doctor.precio} MXN</span>
-              </div>
-              <button onClick={confirmar} disabled={!fecha || !hora || !tipo} className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-40 disabled:cursor-not-allowed">
-                Confirmar Cita
-              </button>
-            </div>
-          )}
-          {paso === 2 && (
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🎉</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">¡Cita agendada!</h3>
-              <div className="bg-sky-50 rounded-xl p-4 text-left text-sm text-gray-600 mb-6 flex flex-col gap-2">
-                <p><span className="font-semibold">Doctor:</span> {doctor.nombre}</p>
-                <p><span className="font-semibold">Fecha:</span> {fecha}</p>
-                <p><span className="font-semibold">Hora:</span> {hora}</p>
-                <p><span className="font-semibold">Tipo:</span> {tipo}</p>
-                <p><span className="font-semibold">Costo:</span> ${doctor.precio} MXN</p>
-              </div>
-              <button onClick={onCerrar} className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600">Cerrar</button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  return [
+    { label: 'Hoy', fecha: formatear(hoy), key: 'hoy' },
+    { label: 'Mañana', fecha: formatear(manana), key: 'manana' },
+    { label: formatear(pasado), fecha: formatear(pasado), key: 'pasado' },
+  ]
 }
 
 // --- ESTRELLAS ---
@@ -102,59 +39,136 @@ function Estrellas({ calificacion }) {
 
 // --- HEADER DEL MÉDICO ---
 function HeaderDoctor({ doctor, onAgendar }) {
+  const [diaSeleccionado, setDiaSeleccionado] = useState('hoy')
+  const fechas = obtenerFechas()
+  const horasDisponibles = doctor.disponibilidad?.[diaSeleccionado] || []
+  const proximaHoy = doctor.disponibilidad?.hoy?.[0]
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-8 flex flex-col md:flex-row gap-6 items-start">
+    <div className="bg-sky-50 rounded-2xl shadow-sm overflow-hidden border border-sky-100">
 
-     {/* Foto */}
-<img
-  src={doctor.imagen}
-  alt={doctor.nombre}
-  className="w-40 h-50 rounded-2xl object-cover object-top flex-shrink-0"
-/>
+      {/* Banner superior */}
+      <div className="p-6 flex flex-col md:flex-row gap-6 items-start">
 
-      {/* Info principal */}
-      <div className="flex-1">
-        <div className="flex flex-wrap gap-2 mb-2">
-          {doctor.verificado && (
-            <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-              ✅ Médico Verificado SEP
-            </span>
+        <img
+          src={doctor.imagen}
+          alt={doctor.nombre}
+          className="w-28 h-28 rounded-2xl object-cover object-top border-4 border-sky-200 shadow-md flex-shrink-0"
+        />
+
+        <div className="flex-1">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {doctor.verificado && (
+              <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                ✅ Médico Verificado SEP
+              </span>
+            )}
+            {doctor.especialistaVerificado && (
+              <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
+                🔵 Especialista Verificado
+              </span>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800">{doctor.nombre}</h1>
+          <p className="text-sky-500 font-medium mb-2">{doctor.especialidad}</p>
+          <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+            <span>📍 {doctor.ubicacion}</span>
+            <span>🕐 {doctor.experiencia} años de experiencia</span>
+            <span>🌐 {doctor.idiomas.join(', ')}</span>
+          </div>
+        </div>
+
+        {/* Precio — glassmorphism sobre sky-50 */}
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-5 text-center border border-sky-200 shadow-sm flex-shrink-0">
+          <p className="text-gray-400 text-xs mb-1">Consulta desde</p>
+          <p className="text-4xl font-bold text-sky-500">${doctor.precio}</p>
+          <p className="text-gray-400 text-xs mb-2">MXN</p>
+          {proximaHoy && (
+            <p className="text-green-500 text-xs font-semibold">
+              🟢 Hoy a las {proximaHoy}
+            </p>
           )}
-          {doctor.especialistaVerificado && (
-            <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
-              🔵 Especialista Verificado
-            </span>
+          {!proximaHoy && (
+            <p className="text-red-400 text-xs font-semibold">
+              🔴 Sin espacio hoy
+            </p>
           )}
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-800">{doctor.nombre}</h1>
-        <p className="text-sky-500 font-medium mb-2">{doctor.especialidad}</p>
-
-        <div className="flex items-center gap-2 mb-3">
-          <Estrellas calificacion={doctor.calificacion} />
-          <span className="font-bold text-gray-800">{doctor.calificacion}</span>
-          <span className="text-gray-400 text-sm">· {doctor.resenas} reseñas</span>
-        </div>
-
-        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-          <span>📍 {doctor.ubicacion}</span>
-          <span>🕐 {doctor.experiencia} años de experiencia</span>
-          <span>🌐 {doctor.idiomas.join(', ')}</span>
-          <span className="capitalize">📋 {doctor.modalidad}</span>
-        </div>
       </div>
 
-      {/* Precio y botón */}
-      <div className="bg-sky-50 rounded-2xl p-6 text-center min-w-48">
-        <p className="text-gray-500 text-sm mb-1">Consulta desde</p>
-        <p className="text-3xl font-bold text-gray-800">${doctor.precio}</p>
-        <p className="text-gray-400 text-xs mb-4">MXN</p>
-        <button 
-        onClick={onAgendar}
-        className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition">
-          Reservar Cita
-        </button>
-        <p className="text-xs text-gray-400 mt-2">⏱ Responde en menos de 1 hr</p>
+      {/* Calificación */}
+      <div className="px-6 py-3 bg-sky-50 backdrop-blur-sm flex items-center gap-3 border-t border-sky-100">
+        <div className="flex gap-0.5">
+          {[1,2,3,4,5].map(e => (
+            <span key={e} className={e <= Math.round(doctor.calificacion) ? 'text-yellow-400' : 'text-gray-200'}>★</span>
+          ))}
+        </div>
+        <span className="font-bold text-gray-800">{doctor.calificacion}</span>
+        <span className="text-gray-400 text-sm">· {doctor.resenas} reseñas</span>
+        <span className="text-gray-300 mx-1">·</span>
+        <span className="text-gray-500 text-sm capitalize">📋 {doctor.modalidad}</span>
+      </div>
+
+      {/* Disponibilidad */}
+      <div className="p-6,">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-gray-800">📅 Disponibilidad</h3>
+          <span className="text-xs text-gray-400">Horarios en tiempo real</span>
+        </div>
+
+        {/* Tabs de días */}
+        <div className="flex gap-2 mb-4">
+          {fechas.map((dia) => {
+            const horas = doctor.disponibilidad?.[dia.key] || []
+            return (
+              <button
+                key={dia.key}
+                onClick={() => setDiaSeleccionado(dia.key)}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold border-2 transition ${
+                  diaSeleccionado === dia.key
+                    ? 'border-sky-500 bg-white text-sky-700 shadow-sm'
+                    : 'border-sky-100 bg-white/50 text-gray-500 hover:border-sky-300'
+                }`}
+              >
+                <p>{dia.label}</p>
+                <p className={`text-xs mt-0.5 font-normal ${horas.length > 0 ? 'text-green-500' : 'text-red-400'}`}>
+                  {horas.length > 0 ? `${horas.length} horarios` : 'Sin espacios'}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Horarios */}
+        {horasDisponibles.length > 0 ? (
+          <>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {horasDisponibles.map((hora) => (
+                <button
+                  key={hora}
+                  onClick={onAgendar}
+                  className="py-2 bg-white border border-sky-200 text-sky-700 rounded-xl text-xs font-semibold hover:bg-sky-500 hover:text-white hover:border-sky-500 transition shadow-sm"
+                >
+                  {hora}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={onAgendar}
+              className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition shadow-sm"
+            >
+              Reservar Cita
+            </button>
+          </>
+        ) : (
+          <div className="text-center py-6 bg-white/60 rounded-xl border border-sky-100">
+            <p className="text-gray-400 text-sm">Sin horarios disponibles este día</p>
+            <p className="text-sky-500 text-xs mt-1 font-medium">Prueba con otro día →</p>
+          </div>
+        )}
+
+        <p className="text-xs text-gray-400 text-center mt-3">⏱ Responde en menos de 1 hora</p>
       </div>
 
     </div>

@@ -1,142 +1,7 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { doctores } from '../utils/doctores'
-
-// --- MODAL DE AGENDAR CITA ---
-function ModalCita({ doctor, onCerrar }) {
-  const [paso, setPaso] = useState(1)
-  const [fecha, setFecha] = useState('')
-  const [hora, setHora] = useState('')
-  const [tipo, setTipo] = useState('')
-
-  const horas = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00']
-
-  const confirmar = () => {
-    if (!fecha || !hora || !tipo) return
-    setPaso(2)
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-
-        {/* Header */}
-        <div className="bg-sky-500 text-white px-6 py-4 rounded-t-2xl flex justify-between items-center">
-          <div>
-            <p className="font-bold">Reservar Cita</p>
-            <p className="text-sky-100 text-sm">{doctor.nombre}</p>
-          </div>
-          <button onClick={onCerrar} className="text-white text-xl hover:text-sky-200">✕</button>
-        </div>
-
-        <div className="p-6">
-          {paso === 1 && (
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Tipo de consulta</label>
-                <div className="flex gap-3">
-                  {doctor.modalidad !== 'presencial' && (
-                    <button
-                      onClick={() => setTipo('videoconsulta')}
-                      className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'videoconsulta' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}
-                    >
-                      💻 Videoconsulta
-                    </button>
-                  )}
-                  {doctor.modalidad !== 'videoconsulta' && (
-                    <button
-                      onClick={() => setTipo('presencial')}
-                      className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'presencial' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}
-                    >
-                      🏥 Presencial
-                    </button>
-                  )}
-                  {doctor.modalidad === 'ambas' && (
-                    <>
-                      <button
-                        onClick={() => setTipo('videoconsulta')}
-                        className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'videoconsulta' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}
-                      >
-                        💻 Video
-                      </button>
-                      <button
-                        onClick={() => setTipo('presencial')}
-                        className={`flex-1 py-3 rounded-xl border-2 text-sm font-medium transition ${tipo === 'presencial' ? 'border-sky-500 bg-sky-50 text-sky-700' : 'border-gray-200 text-gray-600'}`}
-                      >
-                        🏥 Presencial
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Fecha</label>
-                <input
-                  type="date"
-                  value={fecha}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setFecha(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-gray-600"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Horario disponible</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {horas.map((h) => (
-                    <button
-                      key={h}
-                      onClick={() => setHora(h)}
-                      className={`py-2 rounded-lg text-sm border transition ${hora === h ? 'bg-sky-500 text-white border-sky-500' : 'border-gray-200 text-gray-600 hover:border-sky-300'}`}
-                    >
-                      {h}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-sky-50 rounded-xl p-4 flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Costo de consulta</span>
-                <span className="font-bold text-gray-800 text-lg">${doctor.precio} MXN</span>
-              </div>
-
-              <button
-                onClick={confirmar}
-                disabled={!fecha || !hora || !tipo}
-                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Confirmar Cita
-              </button>
-            </div>
-          )}
-
-          {paso === 2 && (
-            <div className="text-center py-4">
-              <div className="text-5xl mb-4">🎉</div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">¡Cita agendada!</h3>
-              <p className="text-gray-500 mb-4">Tu cita ha sido registrada exitosamente</p>
-              <div className="bg-sky-50 rounded-xl p-4 text-left text-sm text-gray-600 mb-6 flex flex-col gap-2">
-                <p><span className="font-semibold">Doctor:</span> {doctor.nombre}</p>
-                <p><span className="font-semibold">Fecha:</span> {fecha}</p>
-                <p><span className="font-semibold">Hora:</span> {hora}</p>
-                <p><span className="font-semibold">Tipo:</span> {tipo}</p>
-                <p><span className="font-semibold">Costo:</span> ${doctor.precio} MXN</p>
-              </div>
-              <p className="text-xs text-gray-400 mb-4">Recibirás una confirmación por correo electrónico</p>
-              <button
-                onClick={onCerrar}
-                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600"
-              >
-                Cerrar
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
+import ModalCita from '../components/ModalCita'
 
 // --- FILTROS ---
 function Filtros({ busqueda, setBusqueda, especialidad, setEspecialidad, modalidad, setModalidad }) {
@@ -150,16 +15,21 @@ function Filtros({ busqueda, setBusqueda, especialidad, setEspecialidad, modalid
         className="flex-1 border border-gray-200 rounded-full px-5 py-3 focus:outline-none focus:border-sky-400"
       />
       <select
-        value={especialidad}
-        onChange={(e) => setEspecialidad(e.target.value)}
-        className="border border-gray-200 rounded-full px-5 py-3 focus:outline-none focus:border-sky-400 text-gray-600"
+    value={especialidad}
+      onChange={(e) => setEspecialidad(e.target.value)}
+      className="border border-gray-200 rounded-full px-5 py-3 focus:outline-none focus:border-sky-400 text-gray-600"
       >
         <option value="">Todas las especialidades</option>
         <option value="Pediatría">Pediatría</option>
         <option value="Cardiología">Cardiología</option>
         <option value="Medicina General">Medicina General</option>
         <option value="Dermatología">Dermatología</option>
-      </select>
+        <option value="Neurología">Neurología</option>
+        <option value="Traumatología">Traumatología</option>
+        <option value="Oftalmología">Oftalmología</option>
+        <option value="Odontología">Odontología</option>
+        <option value="Psicología">Psicología</option>
+|     </select>
       <select
         value={modalidad}
         onChange={(e) => setModalidad(e.target.value)}
@@ -226,9 +96,10 @@ function TarjetaDoctor({ doctor, onAgendar }) {
 }
 
 // --- PÁGINA COMPLETA ---
-function DoctorSearch() {
+  function DoctorSearch() {
+  const [searchParams] = useSearchParams()
   const [busqueda, setBusqueda] = useState('')
-  const [especialidad, setEspecialidad] = useState('')
+  const [especialidad, setEspecialidad] = useState(searchParams.get('especialidad') || '')
   const [modalidad, setModalidad] = useState('')
   const [doctorSeleccionado, setDoctorSeleccionado] = useState(null)
 
