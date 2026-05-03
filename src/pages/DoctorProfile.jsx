@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { doctores } from '../utils/doctores'
 import ModalCita from '../components/ModalCita'
+import { useAuth } from '../context/useAuth'
 
 function obtenerFechas() {
   const hoy = new Date()
@@ -206,18 +207,69 @@ function Servicios({ servicios }) {
 }
 
 // --- RESEÑAS ---
-function Resenas({ reviews, calificacion, total }) {
+function Resenas({ reviews, calificacion, total, doctorId }) {
+  const { resenas } = useAuth()
+  const resenasNuevas = resenas?.[doctorId] || []
+  const todasLasResenas = [...resenasNuevas, ...reviews]
+
+  const promedioReal = todasLasResenas.length > 0
+    ? (todasLasResenas.reduce((sum, r) => sum + r.calificacion, 0) / todasLasResenas.length).toFixed(1)
+    : calificacion
+
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6">
+
+      {/* Header con promedio */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-800">Reseñas de pacientes</h2>
-        <div className="flex items-center gap-2">
-          <Estrellas calificacion={calificacion} />
-          <span className="font-bold text-gray-800">{calificacion}</span>
-          <span className="text-gray-400 text-sm">({total})</span>
+        <div className="flex items-center gap-2 bg-sky-50 px-4 py-2 rounded-xl border border-sky-100">
+          <div className="flex gap-0.5">
+            {[1,2,3,4,5].map(e => (
+              <span key={e} className={e <= Math.round(promedioReal) ? 'text-yellow-400' : 'text-gray-200'}>★</span>
+            ))}
+          </div>
+          <span className="font-bold text-gray-800">{promedioReal}</span>
+          <span className="text-gray-400 text-sm">({todasLasResenas.length})</span>
         </div>
       </div>
 
+      {/* Reseñas verificadas nuevas */}
+      {resenasNuevas.length > 0 && (
+        <div className="mb-5">
+          <p className="text-xs font-bold text-green-600 uppercase tracking-wider mb-3 flex items-center gap-1">
+            <span>✅</span> Reseñas verificadas recientes
+          </p>
+          <div className="flex flex-col gap-3 mb-4">
+            {resenasNuevas.map((review) => (
+              <div key={review.id} className="bg-green-50 border border-green-100 rounded-2xl p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                      {review.autor[0]}
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-800 text-sm">{review.autor}</span>
+                      <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                        ✅ Paciente verificado
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-gray-400 text-xs">{review.fecha}</span>
+                </div>
+                <div className="flex gap-0.5 mb-1">
+                  {[1,2,3,4,5].map(e => (
+                    <span key={e} className={`text-sm ${e <= review.calificacion ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+                  ))}
+                </div>
+                <p className="text-gray-600 text-sm">{review.comentario}</p>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-gray-100 mb-4" />
+        </div>
+      )}
+
+      {/* Reseñas originales */}
       <div className="flex flex-col gap-4">
         {reviews.map((review, i) => (
           <div key={i} className="border-b border-gray-100 pb-4 last:border-0">
@@ -230,11 +282,16 @@ function Resenas({ reviews, calificacion, total }) {
               </div>
               <span className="text-gray-400 text-xs">{review.fecha}</span>
             </div>
-            <Estrellas calificacion={review.calificacion} />
-            <p className="text-gray-600 text-sm mt-1">{review.comentario}</p>
+            <div className="flex gap-0.5 mb-1">
+              {[1,2,3,4,5].map(e => (
+                <span key={e} className={`text-sm ${e <= review.calificacion ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+              ))}
+            </div>
+            <p className="text-gray-600 text-sm">{review.comentario}</p>
           </div>
         ))}
       </div>
+
     </div>
   )
 }
@@ -263,7 +320,7 @@ function DoctorProfile() {
         <HeaderDoctor doctor={doctor} onAgendar={() => setModalAbierto(true)} />
         <SobreElMedico doctor={doctor} />
         <Servicios servicios={doctor.servicios} />
-        <Resenas reviews={doctor.reviews} calificacion={doctor.calificacion} total={doctor.resenas} />
+        <Resenas reviews={doctor.reviews} calificacion={doctor.calificacion} total={doctor.resenas} doctorId={doctor.id} />
       </div>
     </div>
   )

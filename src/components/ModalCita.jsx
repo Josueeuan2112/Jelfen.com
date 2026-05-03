@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { useToast } from './Toast'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/useAuth'
 
 const PASOS = ['Tipo', 'Fecha y Hora', 'Confirmar']
 
@@ -330,11 +333,14 @@ function PasoExito({ doctor, tipo, fecha, hora, onCerrar }) {
 }
 
 function ModalCita({ doctor, onCerrar }) {
+  const { usuario, agregarCita } = useAuth()
+  const navigate = useNavigate()
   const [paso, setPaso] = useState(0)
   const [tipo, setTipo] = useState('')
   const [fecha, setFecha] = useState('')
   const [hora, setHora] = useState('')
   const [confirmado, setConfirmado] = useState(false)
+  const { agregar } = useToast()
 
   const puedeAvanzar = () => {
     if (paso === 0) return tipo !== ''
@@ -342,7 +348,26 @@ function ModalCita({ doctor, onCerrar }) {
     return true
   }
 
-  const confirmar = () => setConfirmado(true)
+ const confirmar = () => {
+  if (usuario) {
+    agregarCita(doctor, tipo, fecha, hora)
+
+    agregar(
+      `¡Cita con ${doctor.nombre} agendada!`,
+      'exito',
+      6000,
+      () => navigate('/dashboard', { state: { abrirCitaDoctor: doctor.id } })
+    )
+  } else {
+    agregar(
+      `Cita registrada. Crea una cuenta para gestionarla.`,
+      'info',
+      5000,
+      () => navigate('/login')
+    )
+  }
+  setConfirmado(true)
+}
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-4">
@@ -365,7 +390,34 @@ function ModalCita({ doctor, onCerrar }) {
         {/* Contenido */}
         <div className="p-6">
           {confirmado ? (
-            <PasoExito doctor={doctor} tipo={tipo} fecha={fecha} hora={hora} onCerrar={onCerrar} />
+            <>
+              <PasoExito doctor={doctor} tipo={tipo} fecha={fecha} hora={hora} onCerrar={onCerrar} />
+
+              {/* Si tiene sesión, mostrar acceso directo al dashboard */}
+              {usuario && (
+                <button
+                  onClick={() => { onCerrar(); navigate('/dashboard') }}
+                  className="w-full mt-3 border-2 border-sky-200 text-sky-600 py-3 rounded-xl font-semibold hover:bg-sky-50 transition text-sm"
+                >
+                  Ver mi cita en el Dashboard →
+                </button>
+              )}
+
+              {/* Si NO tiene sesión, sugerirle que cree cuenta */}
+              {!usuario && (
+                <div className="mt-3 bg-sky-50 rounded-2xl p-4 text-center border border-sky-100">
+                  <p className="text-gray-600 text-sm mb-2">
+                    💡 Crea una cuenta para ver tu historial y gestionar tus citas
+                  </p>
+                  <button
+                    onClick={() => { onCerrar(); navigate('/login') }}
+                    className="text-sky-500 font-semibold text-sm hover:underline"
+                  >
+                    Crear cuenta gratis →
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <>
               {paso === 0 && <Paso1Tipo doctor={doctor} tipo={tipo} setTipo={setTipo} />}

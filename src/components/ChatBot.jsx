@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { preguntarAClaude } from '../utils/api'
 
+
 // Mapa de síntomas → especialidad → URL del buscador
 const MAPA_ESPECIALIDADES = {
   'Neurología': {

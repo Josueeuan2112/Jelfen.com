@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/useAuth'
+import { doctores } from '../utils/doctores'
 
 // --- SIDEBAR ---
 function Sidebar({ seccion, setSeccion, onLogout }) {
@@ -110,35 +111,380 @@ function Calendario() {
   )
 }
 
+function ModalCitaDetalle({ cita, onCerrar }) {
+  const { cancelarCita, reprogramarCita } = useAuth()
+  const doctorData = doctores.find(d => d.id === cita.doctorId)
+  const [vista, setVista] = useState('detalle') // detalle | reprogramar | mensaje | cancelar
+  const [nuevaFecha, setNuevaFecha] = useState(cita.fecha)
+  const [nuevaHora, setNuevaHora] = useState(cita.hora)
+  const [mensaje, setMensaje] = useState('')
+  const [mensajeEnviado, setMensajeEnviado] = useState(false)
+  const [confirmado, setConfirmado] = useState(false)
+
+  const horas = doctorData?.disponibilidad?.manana?.length > 0
+    ? doctorData.disponibilidad.manana
+    : ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00']
+
+  const fechaFormateada = new Date(cita.fecha + 'T12:00:00').toLocaleDateString('es-MX', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  })
+
+  const handleCancelar = () => {
+    cancelarCita(cita.id)
+    setConfirmado(true)
+  }
+
+  const handleReprogramar = () => {
+    reprogramarCita(cita.id, nuevaFecha, nuevaHora)
+    setConfirmado(true)
+  }
+
+  const handleMensaje = () => {
+    if (!mensaje.trim()) return
+    setMensajeEnviado(true)
+  }
+
+  const esCancelada = cita.estado === 'cancelada'
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+
+        {/* Header */}
+        <div className="bg-sky-50 px-6 pt-5 pb-4 border-b border-sky-100 flex-shrink-0">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              {vista !== 'detalle' && !confirmado && (
+                <button
+                  onClick={() => { setVista('detalle'); setConfirmado(false) }}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition text-sm"
+                >
+                  ←
+                </button>
+              )}
+              <p className="font-bold text-gray-800">
+                {vista === 'detalle' && 'Detalle de Cita'}
+                {vista === 'reprogramar' && 'Reprogramar Cita'}
+                {vista === 'mensaje' && 'Mensaje al Médico'}
+                {vista === 'cancelar' && 'Cancelar Cita'}
+              </p>
+            </div>
+            <button
+              onClick={onCerrar}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Info del doctor siempre visible */}
+          <div className="flex items-center gap-3 bg-white/70 backdrop-blur-sm rounded-2xl p-3 border border-sky-100">
+            <img
+              src={doctorData?.imagen || cita.imagen}
+              alt={cita.doctor}
+              className="w-12 h-12 rounded-xl object-cover object-top flex-shrink-0"
+            />
+            <div className="flex-1">
+              <p className="font-bold text-gray-800 text-sm">{cita.doctor}</p>
+              <p className="text-sky-500 text-xs">{cita.especialidad}</p>
+              <div className="flex gap-1 mt-0.5">
+                {[1,2,3,4,5].map(e => (
+                  <span key={e} className={`text-xs ${e <= Math.round(doctorData?.calificacion || 5) ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+                ))}
+                <span className="text-xs text-gray-400 ml-1">{doctorData?.calificacion}</span>
+              </div>
+            </div>
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize flex-shrink-0 ${
+              cita.estado === 'confirmada' ? 'bg-green-100 text-green-700' :
+              cita.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-red-100 text-red-700'
+            }`}>
+              {cita.estado}
+            </span>
+          </div>
+        </div>
+
+        {/* Contenido scrolleable */}
+        <div className="p-6 overflow-y-auto flex-1">
+
+          {/* ── VISTA DETALLE ── */}
+          {vista === 'detalle' && (
+            <div className="flex flex-col gap-4">
+
+              {/* Resumen de la cita */}
+              <div className="bg-sky-50 rounded-2xl p-5 border border-sky-100 flex flex-col gap-3">
+                {[
+                  { icono: cita.tipo === 'videoconsulta' ? '💻' : '🏥', label: 'Tipo', valor: cita.tipo === 'videoconsulta' ? 'Videoconsulta' : 'Presencial' },
+                  { icono: '📅', label: 'Fecha', valor: fechaFormateada },
+                  { icono: '🕐', label: 'Hora', valor: cita.hora },
+                  { icono: '📍', label: 'Lugar', valor: cita.tipo === 'videoconsulta' ? 'En línea — te enviamos el enlace' : doctorData?.ubicacion || 'Mérida, Yucatán' },
+                  { icono: '💰', label: 'Costo', valor: `$${cita.precio} MXN` },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-lg w-7 flex-shrink-0">{item.icono}</span>
+                    <span className="text-gray-400 text-sm w-16 flex-shrink-0">{item.label}</span>
+                    <span className="text-gray-800 text-sm font-medium">{item.valor}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Instrucciones según tipo */}
+              {cita.tipo === 'videoconsulta' && !esCancelada && (
+                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
+                  <p className="text-blue-700 text-sm font-semibold mb-1">💻 Tu videoconsulta</p>
+                  <p className="text-blue-600 text-xs leading-relaxed">
+                    El enlace de la videollamada se enviará a tu correo 30 minutos antes de la cita. Asegúrate de tener cámara y micrófono disponibles.
+                  </p>
+                </div>
+              )}
+
+              {/* Horarios del doctor */}
+              {!esCancelada && (
+                <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
+                  <p className="text-green-700 text-sm font-semibold mb-1">🕐 Horario del consultorio</p>
+                  <p className="text-green-600 text-xs">{doctorData?.horarios || 'Lunes a Viernes 9:00 - 17:00'}</p>
+                </div>
+              )}
+
+              {/* Acciones — solo si no está cancelada */}
+              {!esCancelada ? (
+                <div className="flex flex-col gap-2 mt-2">
+                  <button
+                    onClick={() => setVista('mensaje')}
+                    className="w-full flex items-center justify-center gap-2 bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition"
+                  >
+                    💬 Enviar mensaje al médico
+                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setVista('reprogramar')}
+                      className="flex-1 flex items-center justify-center gap-2 border-2 border-sky-200 text-sky-600 py-3 rounded-xl font-semibold hover:bg-sky-50 transition text-sm"
+                    >
+                      📅 Reprogramar
+                    </button>
+                    <button
+                      onClick={() => setVista('cancelar')}
+                      className="flex-1 flex items-center justify-center gap-2 border-2 border-red-200 text-red-500 py-3 rounded-xl font-semibold hover:bg-red-50 transition text-sm"
+                    >
+                      ✕ Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-red-50 rounded-2xl p-4 border border-red-100 text-center">
+                  <p className="text-red-500 font-semibold text-sm">Esta cita fue cancelada</p>
+                  <p className="text-red-400 text-xs mt-1">Si necesitas atención, agenda una nueva cita</p>
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* ── VISTA REPROGRAMAR ── */}
+          {vista === 'reprogramar' && !confirmado && (
+            <div className="flex flex-col gap-4">
+              <p className="text-gray-500 text-sm">Elige la nueva fecha y horario para tu cita</p>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Nueva fecha</label>
+                <input
+                  type="date"
+                  value={nuevaFecha}
+                  min={new Date().toISOString().split('T')[0]}
+                  onChange={(e) => setNuevaFecha(e.target.value)}
+                  className="w-full border-2 border-gray-100 bg-sky-50 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-gray-700 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Nuevo horario</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {horas.map((h) => (
+                    <button
+                      key={h}
+                      onClick={() => setNuevaHora(h)}
+                      className={`py-2.5 rounded-xl text-xs font-semibold border-2 transition ${
+                        nuevaHora === h
+                          ? 'bg-sky-500 text-white border-sky-500'
+                          : 'bg-sky-50 border-sky-100 text-gray-600 hover:border-sky-300'
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100 flex flex-col gap-1 text-sm">
+                <p className="text-gray-500">Cita actual: <span className="font-semibold text-gray-700">{fechaFormateada} — {cita.hora}</span></p>
+                {nuevaFecha && nuevaHora && (
+                  <p className="text-sky-600">Nueva cita: <span className="font-semibold">
+                    {new Date(nuevaFecha + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })} — {nuevaHora}
+                  </span></p>
+                )}
+              </div>
+
+              <button
+                onClick={handleReprogramar}
+                disabled={!nuevaFecha || !nuevaHora}
+                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Confirmar Reprogramación
+              </button>
+            </div>
+          )}
+
+          {/* ── VISTA MENSAJE ── */}
+          {vista === 'mensaje' && !mensajeEnviado && (
+            <div className="flex flex-col gap-4">
+              <p className="text-gray-500 text-sm">Tu mensaje será enviado directamente al médico antes de tu cita</p>
+
+              <div className="flex flex-col gap-2">
+                {['¿Necesito llevar estudios previos?', '¿Cómo me preparo para la consulta?', 'Tengo una pregunta antes de la cita', 'Necesito confirmar la dirección'].map((sugerencia, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setMensaje(sugerencia)}
+                    className="text-left px-4 py-3 bg-sky-50 border border-sky-100 rounded-xl text-sm text-sky-700 hover:bg-sky-100 transition"
+                  >
+                    {sugerencia}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">O escribe tu mensaje</label>
+                <textarea
+                  value={mensaje}
+                  onChange={(e) => setMensaje(e.target.value)}
+                  placeholder="Escribe tu pregunta o comentario para el médico..."
+                  rows={4}
+                  className="w-full border-2 border-gray-100 bg-sky-50 rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm resize-none"
+                />
+              </div>
+
+              <button
+                onClick={handleMensaje}
+                disabled={!mensaje.trim()}
+                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Enviar mensaje 💬
+              </button>
+            </div>
+          )}
+
+          {/* ── MENSAJE ENVIADO ── */}
+          {vista === 'mensaje' && mensajeEnviado && (
+            <div className="text-center py-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">💬</div>
+              <h3 className="font-bold text-gray-800 text-lg mb-2">¡Mensaje enviado!</h3>
+              <p className="text-gray-500 text-sm mb-2">Tu mensaje fue enviado a <span className="font-semibold text-sky-600">{cita.doctor}</span></p>
+              <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100 text-left my-4">
+                <p className="text-xs text-gray-400 mb-1">Tu mensaje:</p>
+                <p className="text-gray-700 text-sm italic">"{mensaje}"</p>
+              </div>
+              <p className="text-gray-400 text-xs">El médico responderá antes de tu cita del {fechaFormateada}</p>
+            </div>
+          )}
+
+          {/* ── VISTA CANCELAR ── */}
+          {vista === 'cancelar' && !confirmado && (
+            <div className="flex flex-col gap-4">
+              <div className="bg-red-50 rounded-2xl p-5 border border-red-100 text-center">
+                <p className="text-4xl mb-3">⚠️</p>
+                <p className="font-bold text-gray-800 mb-2">¿Cancelar esta cita?</p>
+                <p className="text-gray-500 text-sm">
+                  Estás a punto de cancelar tu cita con <span className="font-semibold">{cita.doctor}</span> el {fechaFormateada} a las {cita.hora}.
+                </p>
+              </div>
+
+              <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100">
+                <p className="text-sky-700 text-sm font-semibold mb-2">📋 Política de cancelación</p>
+                <div className="flex flex-col gap-1 text-xs text-sky-600">
+                  <p>✅ Cancelación gratuita con más de 24 hrs de anticipación</p>
+                  <p>⚠️ Cancelación con menos de 24 hrs puede tener cargo del 50%</p>
+                  <p>❌ No show — cargo del 100% de la consulta</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setVista('detalle')}
+                  className="flex-1 border-2 border-gray-200 text-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-50 transition"
+                >
+                  No cancelar
+                </button>
+                <button
+                  onClick={handleCancelar}
+                  className="flex-1 bg-red-500 text-white py-3 rounded-xl font-semibold hover:bg-red-600 transition"
+                >
+                  Sí, cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── CONFIRMACIÓN REPROGRAMAR / CANCELAR ── */}
+          {confirmado && vista !== 'mensaje' && (
+            <div className="text-center py-6">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 ${
+                vista === 'cancelar' ? 'bg-red-100' : 'bg-green-100'
+              }`}>
+                {vista === 'cancelar' ? '✕' : '✅'}
+              </div>
+              <h3 className="font-bold text-gray-800 text-lg mb-2">
+                {vista === 'cancelar' ? 'Cita cancelada' : '¡Cita reprogramada!'}
+              </h3>
+              <p className="text-gray-500 text-sm mb-6">
+                {vista === 'cancelar'
+                  ? 'Tu cita ha sido cancelada. Puedes agendar una nueva cuando gustes.'
+                  : `Tu cita fue reprogramada para el ${new Date(nuevaFecha + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })} a las ${nuevaHora}.`
+                }
+              </p>
+              <button
+                onClick={onCerrar}
+                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition"
+              >
+                Entendido
+              </button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // --- SECCIÓN CITAS ---
-function SeccionCitas({ usuario, navigate, setSeccion }) {
+function SeccionCitas({ usuario, navigate, setSeccion, citaInicial, onCitaInicialVista }) {
+  const citasPasadas = usuario.historial?.filter(h => !h.calificada) || []
+  const [citaSeleccionada, setCitaSeleccionada] = useState(null)
+
   const estados = {
     confirmada: 'bg-green-100 text-green-700',
     pendiente: 'bg-yellow-100 text-yellow-700',
     cancelada: 'bg-red-100 text-red-700',
   }
 
-  const citasPasadas = usuario.historial?.filter(h => !h.calificada) || []
+  useEffect(() => {
+    if (citaInicial) {
+      setCitaSeleccionada(citaInicial)
+      onCitaInicialVista()
+    }
+  }, [citaInicial])
 
   return (
     <div className="flex flex-col gap-6">
+
+      {citaSeleccionada && (
+        <ModalCitaDetalle
+          cita={citaSeleccionada}
+          onCerrar={() => setCitaSeleccionada(null)}
+        />
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">Próximas Citas</h2>
-        
-        {citasPasadas.length > 0 && (
-  <div
-    onClick={() => setSeccion('historial')}
-    className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-yellow-100 transition"
-  >
-    <span className="text-2xl">⭐</span>
-    <div>
-      <p className="font-semibold text-yellow-800 text-sm">
-        Tienes {citasPasadas.length} {citasPasadas.length === 1 ? 'consulta' : 'consultas'} por calificar
-      </p>
-      <p className="text-yellow-600 text-xs">Haz clic para calificar tu experiencia →</p>
-    </div>
-  </div>
-)}
         <button
           onClick={() => navigate('/doctores')}
           className="bg-sky-500 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-sky-600 transition flex items-center gap-2"
@@ -147,40 +493,75 @@ function SeccionCitas({ usuario, navigate, setSeccion }) {
         </button>
       </div>
 
+      {citasPasadas.length > 0 && (
+        <div
+          onClick={() => setSeccion('historial')}
+          className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-yellow-100 transition"
+        >
+          <span className="text-2xl">⭐</span>
+          <div>
+            <p className="font-semibold text-yellow-800 text-sm">
+              Tienes {citasPasadas.length} {citasPasadas.length === 1 ? 'consulta' : 'consultas'} por calificar
+            </p>
+            <p className="text-yellow-600 text-xs">Haz clic para calificar tu experiencia →</p>
+          </div>
+        </div>
+      )}
+
       {usuario.citas.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
           <p className="text-4xl mb-4">📅</p>
           <p className="text-gray-500">No tienes citas programadas</p>
-          <button onClick={() => navigate('/doctores')} className="mt-4 text-sky-500 hover:underline text-sm">Buscar un doctor</button>
+          <button onClick={() => navigate('/doctores')} className="mt-4 text-sky-500 hover:underline text-sm">
+            Buscar un doctor
+          </button>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {usuario.citas.map((cita) => (
-            <div key={cita.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition flex items-center gap-5">
+          {usuario.citas.map((cita) => {
+            const doctorData = doctores.find(d => d.id === cita.doctorId)
+            const imagen = doctorData?.imagen || cita.imagen
 
-              {/* Fecha */}
-              <div className="bg-sky-500 text-white rounded-xl p-3 text-center min-w-16 flex-shrink-0">
-                <p className="text-xl font-bold leading-none">{new Date(cita.fecha).getDate()}</p>
-                <p className="text-xs text-sky-200">{new Date(cita.fecha).toLocaleString('es-MX', { month: 'short' })}</p>
-              </div>
-
-              {/* Info */}
-              <div className="flex-1">
-                <p className="font-bold text-gray-800">{cita.doctor}</p>
-                <p className="text-sky-500 text-sm">{cita.especialidad}</p>
-                <div className="flex gap-3 mt-1 text-xs text-gray-400">
-                  <span>🕐 {cita.hora}</span>
-                  <span>📋 {cita.tipo}</span>
+            return (
+              <button
+                key={cita.id}
+                onClick={() => setCitaSeleccionada(cita)}
+                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md hover:border-sky-200 transition flex items-center gap-4 text-left w-full group"
+              >
+                <div className="bg-sky-500 text-white rounded-xl p-3 text-center min-w-14 flex-shrink-0">
+                  <p className="text-xl font-bold leading-none">
+                    {new Date(cita.fecha + 'T12:00:00').getDate()}
+                  </p>
+                  <p className="text-xs text-sky-200">
+                    {new Date(cita.fecha + 'T12:00:00').toLocaleString('es-MX', { month: 'short' })}
+                  </p>
                 </div>
-              </div>
 
-              {/* Estado */}
-              <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${estados[cita.estado]}`}>
-                {cita.estado}
-              </span>
+                <img
+                  src={imagen}
+                  alt={cita.doctor}
+                  className="w-12 h-12 rounded-xl object-cover object-top flex-shrink-0 border-2 border-sky-100"
+                />
 
-            </div>
-          ))}
+                <div className="flex-1">
+                  <p className="font-bold text-gray-800">{cita.doctor}</p>
+                  <p className="text-sky-500 text-sm">{cita.especialidad}</p>
+                  <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                    <span>🕐 {cita.hora}</span>
+                    <span>📋 {cita.tipo}</span>
+                    <span>💰 ${cita.precio} MXN</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full capitalize ${estados[cita.estado]}`}>
+                    {cita.estado}
+                  </span>
+                  <span className="text-sky-300 group-hover:text-sky-500 transition text-sm">→</span>
+                </div>
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
@@ -549,11 +930,112 @@ Generado por Jelfen — Tu salud en buenas manos
   )
 }
 
+// ----- NOTIFICACIONES -----
+function SeccionNotificaciones() {
+  const { notificaciones, marcarLeida, marcarTodasLeidas } = useAuth()
+  const noLeidas = notificaciones?.filter(n => !n.leida).length || 0
+
+  const colores = {
+    cita: 'bg-sky-50 border-sky-200',
+    recordatorio: 'bg-yellow-50 border-yellow-200',
+    mensaje: 'bg-green-50 border-green-200',
+    sistema: 'bg-gray-50 border-gray-200',
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Notificaciones</h2>
+          {noLeidas > 0 && (
+            <p className="text-sky-500 text-sm mt-1">{noLeidas} sin leer</p>
+          )}
+        </div>
+        {noLeidas > 0 && (
+          <button
+            onClick={marcarTodasLeidas}
+            className="text-sm text-sky-500 hover:underline font-medium"
+          >
+            Marcar todas como leídas
+          </button>
+        )}
+      </div>
+
+      {notificaciones?.length === 0 ? (
+        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100 shadow-sm">
+          <p className="text-5xl mb-4">🔔</p>
+          <p className="text-gray-500 font-medium">No tienes notificaciones</p>
+          <p className="text-gray-400 text-sm mt-1">Aquí aparecerán tus avisos y recordatorios</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {notificaciones.map((notif) => (
+            <button
+              key={notif.id}
+              onClick={() => marcarLeida(notif.id)}
+              className={`w-full text-left rounded-2xl p-5 border-2 transition hover:shadow-md ${
+                notif.leida
+                  ? 'bg-white border-gray-100 opacity-70'
+                  : colores[notif.tipo] || colores.sistema
+              }`}
+            >
+              <div className="flex items-start gap-4">
+
+                {/* Ícono */}
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0 ${
+                  notif.leida ? 'bg-gray-100' : 'bg-white shadow-sm'
+                }`}>
+                  {notif.icono}
+                </div>
+
+                {/* Contenido */}
+                <div className="flex-1">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className={`font-bold text-sm ${notif.leida ? 'text-gray-500' : 'text-gray-800'}`}>
+                      {notif.titulo}
+                    </p>
+                    <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{notif.fecha}</span>
+                  </div>
+                  <p className={`text-sm leading-relaxed ${notif.leida ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {notif.mensaje}
+                  </p>
+                </div>
+
+                {/* Punto de no leída */}
+                {!notif.leida && (
+                  <div className="w-3 h-3 bg-sky-500 rounded-full flex-shrink-0 mt-1" />
+                )}
+
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+    </div>
+  )
+}
+
 // --- PÁGINA COMPLETA ---
 function Dashboard() {
   const { usuario, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [seccion, setSeccion] = useState('citas')
+  const [citaSeleccionadaInicial, setCitaSeleccionadaInicial] = useState(null)
+
+  useEffect(() => {
+    if (location.state?.abrirCitaDoctor && usuario?.citas) {
+      const cita = usuario.citas
+        .filter(c => c.doctorId === location.state.abrirCitaDoctor)
+        .at(-1)
+      if (cita) {
+        setSeccion('citas')
+        setCitaSeleccionadaInicial(cita)
+      }
+    }
+  }, [location.state, usuario])
 
   if (!usuario) {
     navigate('/login')
@@ -567,12 +1049,20 @@ function Dashboard() {
 
   const renderSeccion = () => {
     switch(seccion) {
-      case 'citas': return <SeccionCitas usuario={usuario} navigate={navigate} setSeccion={setSeccion} />
+      case 'citas': return (
+        <SeccionCitas
+          usuario={usuario}
+          navigate={navigate}
+          setSeccion={setSeccion}
+          citaInicial={citaSeleccionadaInicial}
+          onCitaInicialVista={() => setCitaSeleccionadaInicial(null)}
+        />
+      )
       case 'perfil': return <SeccionPerfil usuario={usuario} />
       case 'datos': return <SeccionProximamente titulo="Mis Datos" icono="📋" />
       case 'pagos': return <SeccionProximamente titulo="Pagos" icono="💳" />
       case 'historial': return <SeccionHistorial usuario={usuario} />
-      case 'notificaciones': return <SeccionProximamente titulo="Notificaciones" icono="🔔" />
+      case 'notificaciones': return <SeccionNotificaciones />
       default: return null
     }
   }
@@ -580,11 +1070,10 @@ function Dashboard() {
   return (
     <div className="flex min-h-screen bg-sky-50">
 
-      <Sidebar seccion={seccion} setSeccion={setSeccion} usuario={usuario} onLogout={onLogout} />
+      <Sidebar seccion={seccion} setSeccion={setSeccion} onLogout={onLogout} />
 
       <div className="flex-1 flex flex-col">
 
-        {/* Header */}
         <div className="bg-sky-50 border-b border-gray-100 px-8 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-gray-800">— Mi Cuenta</h1>
           <div className="flex items-center gap-3">
@@ -596,20 +1085,16 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Contenido */}
         <div className="flex-1 flex gap-6 p-8">
 
-          {/* Main */}
           <div className="flex-1">
             {renderSeccion()}
           </div>
 
-          {/* Panel derecho */}
           <div className="w-72 flex flex-col gap-5 flex-shrink-0">
 
-            <Calendario />
+            <Calendario citas={usuario.citas} />
 
-            {/* Mensajes recientes */}
             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-3">💬 Mensajes Recientes</h3>
               <div className="flex flex-col gap-3">
@@ -625,7 +1110,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Recomendaciones */}
             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
               <h3 className="font-bold text-gray-800 mb-3">⭐ Recomendaciones</h3>
               <p className="text-xs text-gray-500 leading-relaxed mb-3">
