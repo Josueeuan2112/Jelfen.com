@@ -8,7 +8,7 @@ import DoctorSearch from './pages/DoctorSearch'
 import DoctorRegister from './pages/DoctorRegister'
 import DoctorProfile from './pages/DoctorProfile'
 import Contacto from './pages/Contacto'
-import Login from './pages/Login'
+import Login from './pages/login'
 import Dashboard from './pages/Dashboard'
 import NotFound from './pages/NotFound'
 
