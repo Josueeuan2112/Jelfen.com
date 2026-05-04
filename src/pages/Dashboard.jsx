@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { doctores } from '../utils/doctores'
+import BotonFavorito from '../components/BotonFavorito'
 
 // --- SIDEBAR ---
 function Sidebar({ seccion, setSeccion, onLogout }) {
   const items = [
     { id: 'citas', icono: '📅', label: 'Citas' },
+    { id: 'favoritos', icono: '❤️', label: 'Favoritos' },
+    { id: 'frecuentes', icono: '🔄', label: 'Frecuentes' },
     { id: 'perfil', icono: '👤', label: 'Perfil' },
     { id: 'datos', icono: '📋', label: 'Datos' },
     { id: 'pagos', icono: '💳', label: 'Pagos' },
@@ -67,7 +70,7 @@ function Sidebar({ seccion, setSeccion, onLogout }) {
 }
 
 // --- CALENDARIO ---
-function Calendario() {
+function Calendario({ citas = []}) {
   const hoy = new Date()
   const [mes, setMes] = useState(hoy.getMonth())
   const [anio, setAnio] = useState(hoy.getFullYear())
@@ -79,7 +82,12 @@ function Calendario() {
   const diasEnMes = new Date(anio, mes + 1, 0).getDate()
   const offset = primerDia === 0 ? 6 : primerDia - 1
 
-  const diasConCita = [5, 15, 21, 27]
+  const diasConCita = citas
+  .filter(c => {
+    const f = new Date(c.fecha + 'T12:00:00')
+    return f.getMonth() === mes && f.getFullYear() === anio && c.estado !== 'cancelada'
+  })
+  .map(c => new Date(c.fecha + 'T12:00:00').getDate())
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
@@ -1017,9 +1025,292 @@ function SeccionNotificaciones() {
   )
 }
 
+function SeccionFavoritos({ navigate }) {
+  const { favoritos, esFavorito } = useAuth()
+  const [doctorSeleccionado, setDoctorSeleccionado] = useState(null)
+
+  const doctoresFavoritos = doctores.filter(d => favoritos.includes(d.id))
+
+  return (
+    <div className="flex flex-col gap-6">
+
+      {doctorSeleccionado && (
+        <ModalCitaDetalle
+          cita={{ doctorId: doctorSeleccionado.id, doctor: doctorSeleccionado.nombre, especialidad: doctorSeleccionado.especialidad, imagen: doctorSeleccionado.imagen, estado: 'nueva' }}
+          onCerrar={() => setDoctorSeleccionado(null)}
+        />
+      )}
+
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Mis Favoritos</h2>
+          <p className="text-gray-400 text-sm mt-1">
+            {doctoresFavoritos.length === 0
+              ? 'Guarda doctores para acceder rápido'
+              : `${doctoresFavoritos.length} ${doctoresFavoritos.length === 1 ? 'doctor guardado' : 'doctores guardados'}`
+            }
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/buscar')}
+          className="text-sky-500 hover:underline text-sm font-medium"
+        >
+          Buscar más →
+        </button>
+      </div>
+
+      {doctoresFavoritos.length === 0 ? (
+        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100 shadow-sm">
+          <p className="text-5xl mb-4">🤍</p>
+          <p className="text-gray-500 font-medium mb-1">No tienes favoritos todavía</p>
+          <p className="text-gray-400 text-sm mb-6">Toca el ❤️ en cualquier tarjeta de doctor para guardarlo aquí</p>
+          <button
+            onClick={() => navigate('/doctores')}
+            className="bg-sky-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-sky-600 transition"
+          >
+            Explorar doctores
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {doctoresFavoritos.map((doctor) => (
+            <div
+              key={doctor.id}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden"
+            >
+              {/* Imagen */}
+              <div className="relative">
+                <img
+                  src={doctor.imagen}
+                  alt={doctor.nombre}
+                  className="w-full h-36 object-cover object-top"
+                />
+                <div className="absolute top-2 left-2">
+                  <BotonFavorito doctorId={doctor.id} />
+                </div>
+                {doctor.verificado && (
+                  <span className="absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    ✅ SEP
+                  </span>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="p-4">
+                <h3 className="font-bold text-gray-800">{doctor.nombre}</h3>
+                <p className="text-sky-500 text-sm mb-1">{doctor.especialidad}</p>
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-yellow-400 text-sm">★</span>
+                  <span className="font-semibold text-gray-800 text-sm">{doctor.calificacion}</span>
+                  <span className="text-gray-400 text-xs">· {doctor.resenas} reseñas</span>
+                </div>
+                <p className="text-gray-500 text-xs mb-3">📍 {doctor.ubicacion}</p>
+
+                <div className="flex gap-2 pt-3 border-t border-gray-100">
+                  <Link
+                    to={`/doctor/${doctor.id}`}
+                    className="flex-1 border border-sky-500 text-sky-500 py-2 rounded-xl text-xs font-semibold text-center hover:bg-sky-50 transition"
+                  >
+                    Ver Perfil
+                  </Link>
+                  <button
+                    onClick={() => navigate(`/doctor/${doctor.id}`)}
+                    className="flex-1 bg-sky-500 text-white py-2 rounded-xl text-xs font-semibold hover:bg-sky-600 transition"
+                  >
+                    Reservar
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SeccionMedicosFrecuentes({ navigate }) {
+  const { usuario, getMedicosFrecuentes, esFavorito, toggleFavorito } = useAuth()
+  const [modalAbierto, setModalAbierto] = useState(null)
+  const frecuentes = getMedicosFrecuentes()
+
+  const obtenerInsignia = (visitas) => {
+    if (visitas >= 4) return { label: 'Mi doctor de confianza', color: 'bg-yellow-100 text-yellow-700', icono: '🏆' }
+    if (visitas >= 3) return { label: 'Frecuente', color: 'bg-sky-100 text-sky-700', icono: '⭐' }
+    return { label: 'Visitado', color: 'bg-gray-100 text-gray-600', icono: '✅' }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+
+      {modalAbierto && (
+        <ModalCitaDetalle
+          cita={modalAbierto}
+          onCerrar={() => setModalAbierto(null)}
+        />
+      )}
+
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Mis Médicos Frecuentes</h2>
+          <p className="text-gray-400 text-sm mt-1">
+            Doctores con los que más has consultado
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/buscar')}
+          className="text-sky-500 hover:underline text-sm font-medium"
+        >
+          Buscar más →
+        </button>
+      </div>
+
+      {frecuentes.length === 0 ? (
+        <div className="bg-white rounded-2xl p-16 text-center border border-gray-100 shadow-sm">
+          <p className="text-5xl mb-4">👨‍⚕️</p>
+          <p className="text-gray-500 font-medium mb-1">Aún no tienes médicos frecuentes</p>
+          <p className="text-gray-400 text-sm mb-6">
+            Cuando hayas tenido varias consultas con el mismo doctor, aparecerá aquí para acceso rápido
+          </p>
+          <button
+            onClick={() => navigate('/doctores')}
+            className="bg-sky-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-sky-600 transition"
+          >
+            Encontrar un doctor
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+
+          {/* Doctor principal — el más frecuente */}
+          {frecuentes[0] && (
+            <div className="bg-gradient-to-r from-sky-500 to-blue-600 rounded-2xl p-6 flex flex-col md:flex-row gap-5 items-center">
+
+              <div className="relative flex-shrink-0">
+                <img
+                  src={frecuentes[0].doctor.imagen}
+                  alt={frecuentes[0].doctor.nombre}
+                  className="w-24 h-24 rounded-2xl object-cover object-top border-4 border-white/30 shadow-lg"
+                />
+                <span className="absolute -top-2 -right-2 text-2xl">🏆</span>
+              </div>
+
+              <div className="flex-1 text-center md:text-left">
+                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">
+                  Tu doctor de confianza
+                </span>
+                <h3 className="text-xl font-bold text-white">{frecuentes[0].doctor.nombre}</h3>
+                <p className="text-sky-200 mb-1">{frecuentes[0].doctor.especialidad}</p>
+                <div className="flex flex-wrap gap-3 justify-center md:justify-start text-sm text-sky-100">
+                  <span>⭐ {frecuentes[0].doctor.calificacion}</span>
+                  <span>🔄 {frecuentes[0].visitas} {frecuentes[0].visitas === 1 ? 'consulta' : 'consultas'}</span>
+                  <span>📍 {frecuentes[0].doctor.ubicacion}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                <button
+                  onClick={() => navigate(`/doctor/${frecuentes[0].doctor.id}`)}
+                  className="bg-white text-sky-600 px-5 py-2.5 rounded-xl font-semibold hover:bg-sky-50 transition text-sm"
+                >
+                  Ver Perfil
+                </button>
+                <button
+                  onClick={() => {
+                    const ultimaCita = [...(usuario?.citas || []), ...(usuario?.historial || [])]
+                      .filter(c => c.doctorId === frecuentes[0].doctor.id)
+                      .at(-1)
+                    if (ultimaCita) setModalAbierto(ultimaCita)
+                    else navigate(`/doctor/${frecuentes[0].doctor.id}`)
+                  }}
+                  className="bg-white/20 border border-white/30 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-white/30 transition text-sm"
+                >
+                  Nueva Cita
+                </button>
+              </div>
+
+            </div>
+          )}
+
+          {/* Resto de doctores frecuentes */}
+          {frecuentes.slice(1).map(({ doctor, visitas }) => {
+            const insignia = obtenerInsignia(visitas)
+            const esFav = esFavorito(doctor.id)
+
+            return (
+              <div
+                key={doctor.id}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition p-5 flex items-center gap-4"
+              >
+
+                {/* Imagen */}
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={doctor.imagen}
+                    alt={doctor.nombre}
+                    className="w-16 h-16 rounded-2xl object-cover object-top border-2 border-sky-100"
+                  />
+                  <span className="absolute -top-1 -right-1 text-sm">{insignia.icono}</span>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <p className="font-bold text-gray-800">{doctor.nombre}</p>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${insignia.color}`}>
+                      {insignia.label}
+                    </span>
+                  </div>
+                  <p className="text-sky-500 text-sm">{doctor.especialidad}</p>
+                  <div className="flex gap-3 text-xs text-gray-400 mt-1">
+                    <span>⭐ {doctor.calificacion}</span>
+                    <span>🔄 {visitas} {visitas === 1 ? 'consulta' : 'consultas'}</span>
+                    <span>📍 {doctor.ubicacion}</span>
+                  </div>
+                </div>
+
+                {/* Acciones */}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => toggleFavorito(doctor.id)}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${
+                      esFav ? 'bg-red-100 text-red-500' : 'bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-400'
+                    }`}
+                  >
+                    {esFav ? '❤️' : '🤍'}
+                  </button>
+                  <button
+                    onClick={() => navigate(`/doctor/${doctor.id}`)}
+                    className="w-9 h-9 rounded-xl bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-100 transition text-lg"
+                  >
+                    →
+                  </button>
+                </div>
+
+              </div>
+            )
+          })}
+
+          {/* Tip al final */}
+          <div className="bg-sky-50 rounded-2xl p-4 border border-sky-100 flex items-start gap-3">
+            <span className="text-2xl flex-shrink-0">💡</span>
+            <div>
+              <p className="text-sky-700 font-semibold text-sm">¿Sabías que?</p>
+              <p className="text-sky-600 text-xs mt-0.5 leading-relaxed">
+                Mantener seguimiento con el mismo médico mejora tu salud a largo plazo. Jelfen recuerda tu historial para que no tengas que repetirlo cada vez.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  )
+}
+
 // --- PÁGINA COMPLETA ---
 function Dashboard() {
-  const { usuario, logout } = useAuth()
+  const { usuario, logout, getMedicosFrecuentes } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [seccion, setSeccion] = useState('citas')
@@ -1063,71 +1354,93 @@ function Dashboard() {
       case 'pagos': return <SeccionProximamente titulo="Pagos" icono="💳" />
       case 'historial': return <SeccionHistorial usuario={usuario} />
       case 'notificaciones': return <SeccionNotificaciones />
+      case 'favoritos': return <SeccionFavoritos navigate={navigate} /> 
+      case 'frecuentes': return <SeccionMedicosFrecuentes navigate={navigate} />
       default: return null
     }
   }
 
-  return (
-    <div className="flex min-h-screen bg-sky-50">
+ return (
+  <div className="flex min-h-screen bg-sky-50">
+    <Sidebar seccion={seccion} setSeccion={setSeccion} onLogout={onLogout} />
 
-      <Sidebar seccion={seccion} setSeccion={setSeccion} onLogout={onLogout} />
+    <div className="flex-1 flex flex-col min-w-0">
 
-      <div className="flex-1 flex flex-col">
-
-        <div className="bg-sky-50 border-b border-gray-100 px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">— Mi Cuenta</h1>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-sky-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-              {usuario.avatar}
-            </div>
-            <p className="font-semibold text-gray-700 text-sm">{usuario.nombre}</p>
-            <button onClick={onLogout} className="text-gray-400 hover:text-red-400 transition text-xl" title="Cerrar sesión">→</button>
+      {/* Header */}
+      <div className="bg-sky-50 border-b border-gray-100 px-4 md:px-8 py-4 flex justify-between items-center">
+        <h1 className="text-lg md:text-xl font-bold text-gray-800">— Mi Cuenta</h1>
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-8 h-8 md:w-9 md:h-9 bg-sky-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            {usuario.avatar}
           </div>
+          <p className="font-semibold text-gray-700 text-sm hidden sm:block">{usuario.nombre}</p>
+          <button onClick={onLogout} className="text-gray-400 hover:text-red-400 transition text-xl" title="Cerrar sesión">→</button>
+        </div>
+      </div>
+
+      {/* Contenido */}
+      <div className="flex-1 flex gap-6 p-4 md:p-8 pb-20 md:pb-8">
+
+        {/* Main — full width en mobile */}
+        <div className="flex-1 min-w-0">
+          {renderSeccion()}
         </div>
 
-        <div className="flex-1 flex gap-6 p-8">
+        {/* Panel derecho — solo desktop */}
+        <div className="hidden lg:flex w-72 flex-col gap-5 flex-shrink-0">
+          <Calendario citas={usuario.citas} />
 
-          <div className="flex-1">
-            {renderSeccion()}
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-3">💬 Mensajes Recientes</h3>
+            <div className="flex flex-col gap-3">
+              {[
+                { de: 'Jelfen', msg: 'Tu cita del 15 de mayo ha sido confirmada exitosamente.' },
+                { de: 'Dra. Elena Gómez', msg: 'Recuerda traer tus estudios previos a la consulta.' },
+              ].map((m, i) => (
+                <div key={i} className="bg-sky-50 rounded-xl p-3">
+                  <p className="text-xs font-bold text-sky-600 mb-1">{m.de}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed">{m.msg}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="w-72 flex flex-col gap-5 flex-shrink-0">
-
-            <Calendario citas={usuario.citas} />
-
+          {getMedicosFrecuentes().length > 0 && (
             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-              <h3 className="font-bold text-gray-800 mb-3">💬 Mensajes Recientes</h3>
-              <div className="flex flex-col gap-3">
-                {[
-                  { de: 'Jelfen', msg: 'Tu cita del 15 de mayo ha sido confirmada exitosamente.' },
-                  { de: 'Dra. Elena Gómez', msg: 'Recuerda traer tus estudios previos a la consulta.' },
-                ].map((m, i) => (
-                  <div key={i} className="bg-sky-50 rounded-xl p-3">
-                    <p className="text-xs font-bold text-sky-600 mb-1">{m.de}</p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{m.msg}</p>
-                  </div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-gray-800">🔄 Mis Médicos</h3>
+                <button onClick={() => setSeccion('frecuentes')} className="text-xs text-sky-500 hover:underline">Ver todos →</button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {getMedicosFrecuentes().slice(0, 3).map(({ doctor, visitas }) => (
+                  <button key={doctor.id} onClick={() => navigate(`/doctor/${doctor.id}`)} className="flex items-center gap-3 hover:bg-sky-50 p-2 rounded-xl transition text-left w-full">
+                    <img src={doctor.imagen} alt={doctor.nombre} className="w-10 h-10 rounded-xl object-cover object-top flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 text-xs truncate">{doctor.nombre}</p>
+                      <p className="text-sky-500 text-xs">{doctor.especialidad}</p>
+                    </div>
+                    <span className="text-xs text-gray-400 flex-shrink-0">{visitas}x</span>
+                  </button>
                 ))}
               </div>
             </div>
+          )}
 
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-              <h3 className="font-bold text-gray-800 mb-3">⭐ Recomendaciones</h3>
-              <p className="text-xs text-gray-500 leading-relaxed mb-3">
-                Basado en tu historial, te recomendamos una revisión general cada 6 meses.
-              </p>
-              <button
-                onClick={() => navigate('/doctores')}
-                className="w-full bg-sky-500 text-white py-2 rounded-xl text-xs font-semibold hover:bg-sky-600 transition"
-              >
-                Ver Doctores Disponibles
-              </button>
-            </div>
-
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-3">⭐ Recomendaciones</h3>
+            <p className="text-xs text-gray-500 leading-relaxed mb-3">
+              Basado en tu historial, te recomendamos una revisión general cada 6 meses.
+            </p>
+            <button onClick={() => navigate('/doctores')} className="w-full bg-sky-500 text-white py-2 rounded-xl text-xs font-semibold hover:bg-sky-600 transition">
+              Ver Doctores Disponibles
+            </button>
           </div>
         </div>
+
       </div>
     </div>
-  )
+  </div>
+)
 }
 
 export default Dashboard

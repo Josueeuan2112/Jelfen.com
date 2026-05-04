@@ -5,38 +5,31 @@ import { Link } from 'react-router-dom'
 // --- HERO ---
 function HeroNosotros() {
   return (
-    <section className="relative min-h-150 flex items-center overflow-hidden">
+    <section className="relative min-h-[500px] md:min-h-[600px] flex items-center overflow-hidden">
+      <img src="/nosotros-doctors.png" alt="Equipo médico Jelfen" className="absolute inset-0 w-full h-full object-cover object-center" />
+      <div className="absolute inset-0 bg-white/70 md:bg-transparent" />
 
-      {/* Imagen ocupa todo el hero */}
-      <img
-        src="/nosotros-doctors.png"
-        alt="Equipo médico Jelfen"
-        className="absolute inset-0 w-full h-full object-cover object-center"
-      />
-
-      {/* Texto encima — pegado a la izquierda */}
-      <div className="relative z-10 ml-10 md:ml-20 py-24 max-w-lg text-left">
-        <span className="bg-white/80 text-sky-600 text-xs font-bold px-4 py-2 rounded-full tracking-widest uppercase mb-6 inline-block backdrop-blur-sm">
-          Sobre Jelfen
-        </span>
-        <h1 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
-          La plataforma médica <br />
-          que México <br />
-          <span className="text-sky-500">necesitaba</span>
-        </h1>
-        <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-          Nacimos para resolver un problema real: conectar pacientes con médicos confiables, verificados y accesibles — sin filas, sin burocracia, sin letra chica.
-        </p>
-        <div className="flex gap-4 flex-wrap justify-start">
-          <Link to="/doctores" className="bg-sky-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-sky-600 shadow-md transition">
-            Soy paciente
-          </Link>
-          <Link to="/registro" className="border-2 border-sky-500 text-sky-500 bg-white/80 backdrop-blur-sm px-8 py-3 rounded-full text-lg font-semibold hover:bg-white transition">
-            Soy Médico
-          </Link>
+      <div className="relative z-10 w-full px-4 md:px-0 md:ml-10 lg:ml-20 py-10 md:py-24 md:max-w-lg">
+        <div className="bg-white/90 md:bg-transparent backdrop-blur-md md:backdrop-blur-none rounded-3xl md:rounded-none p-6 md:p-0 shadow-xl md:shadow-none">
+          <span className="bg-sky-100 text-sky-600 text-xs font-bold px-3 py-1.5 rounded-full tracking-widest uppercase mb-4 inline-block">
+            Sobre Jelfen
+          </span>
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-800 mb-4 leading-tight">
+            La plataforma médica que México <span className="text-sky-500">necesitaba</span>
+          </h1>
+          <p className="text-gray-500 text-base md:text-lg mb-6 leading-relaxed">
+            Nacimos para resolver un problema real: conectar pacientes con médicos confiables, verificados y accesibles.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            <Link to="/doctores" className="bg-sky-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-sky-600 shadow-md transition text-sm">
+              Encontrar un Doctor
+            </Link>
+            <Link to="/registro" className="border-2 border-sky-500 text-sky-500 px-6 py-3 rounded-full font-semibold hover:bg-sky-100 transition text-sm">
+              Soy Médico
+            </Link>
+          </div>
         </div>
       </div>
-
     </section>
   )
 }
@@ -46,17 +39,16 @@ function Estadisticas() {
   const stats = [
     { numero: '500+', label: 'Médicos verificados' },
     { numero: '12,000+', label: 'Pacientes atendidos' },
-    { numero: '98%', label: 'Satisfacción de pacientes' },
-    { numero: '48 hrs', label: 'Tiempo máximo de verificación' },
+    { numero: '98%', label: 'Satisfacción' },
+    { numero: '48 hrs', label: 'Verificación máx.' },
   ]
-
   return (
-    <section className="bg-sky-50 py-16 px-6">
-      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+    <section className="bg-white py-10 md:py-16 px-4 md:px-6">
+      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="text-center">
-            <p className="text-4xl font-bold text-sky-500 mb-2">{stat.numero}</p>
-            <p className="text-gray-500 text-sm">{stat.label}</p>
+            <p className="text-3xl md:text-4xl font-bold text-sky-500 mb-1">{stat.numero}</p>
+            <p className="text-gray-500 text-xs md:text-sm">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -67,53 +59,32 @@ function Estadisticas() {
 // --- PROBLEMA Y SOLUCIÓN ---
 function ProblemaYSolucion() {
   return (
-    <section className="py-16 px-6 bg-sky-50">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-
-        {/* Problema */}
+    <section className="py-10 md:py-16 px-4 md:px-6 bg-sky-50">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-start">
         <div>
-          <span className="text-red-400 font-bold text-sm uppercase tracking-widest">El problema</span>
-          <h2 className="text-3xl font-bold text-gray-800 mt-2 mb-6">
-            Buscar un médico confiable no debería ser tan difícil
-          </h2>
-          <div className="flex flex-col gap-4">
-            {[
-              'Horas esperando en salas de espera llenas',
-              'No saber si el médico está realmente certificado',
-              'Precios ocultos que aparecen al final',
-              'Imposible encontrar especialistas fuera de tu ciudad',
-              'Plataformas donde cualquiera puede publicar como "médico"',
-            ].map((item, i) => (
+          <span className="text-red-400 font-bold text-xs uppercase tracking-widest">El problema</span>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mt-2 mb-5">Buscar un médico confiable no debería ser tan difícil</h2>
+          <div className="flex flex-col gap-3">
+            {['Horas esperando en salas llenas', 'No saber si el médico está certificado', 'Precios ocultos al final', 'Imposible encontrar especialistas fuera de tu ciudad', 'Plataformas sin validación real'].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
-                <span className="text-red-400 text-lg mt-0.5">✗</span>
-                <p className="text-gray-600">{item}</p>
+                <span className="text-red-400 text-lg mt-0.5 flex-shrink-0">✗</span>
+                <p className="text-gray-600 text-sm">{item}</p>
               </div>
             ))}
           </div>
         </div>
-
-        {/* Solución */}
         <div>
-          <span className="text-green-500 font-bold text-sm uppercase tracking-widest">La solución Jelfen</span>
-          <h2 className="text-3xl font-bold text-gray-800 mt-2 mb-6">
-            Salud de calidad, verificada y accesible desde tu celular
-          </h2>
-          <div className="flex flex-col gap-4">
-            {[
-              'Agenda en minutos, sin filas ni esperas innecesarias',
-              'Cada médico verificado directamente con la SEP',
-              'Precios transparentes desde el primer clic',
-              'Videoconsultas a todo México sin importar dónde estés',
-              'Solo médicos con cédula profesional activa y documentos validados',
-            ].map((item, i) => (
+          <span className="text-green-500 font-bold text-xs uppercase tracking-widest">La solución Jelfen</span>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mt-2 mb-5">Salud de calidad, verificada y accesible desde tu celular</h2>
+          <div className="flex flex-col gap-3">
+            {['Agenda en minutos, sin filas', 'Cada médico verificado con la SEP', 'Precios transparentes desde el primer clic', 'Videoconsultas a todo México', 'Solo médicos con cédula activa validada'].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
-                <span className="text-green-500 text-lg mt-0.5">✓</span>
-                <p className="text-gray-600">{item}</p>
+                <span className="text-green-500 text-lg mt-0.5 flex-shrink-0">✓</span>
+                <p className="text-gray-600 text-sm">{item}</p>
               </div>
             ))}
           </div>
         </div>
-
       </div>
     </section>
   )
@@ -235,42 +206,24 @@ function VerificacionSEP() {
 // --- VALORES ---
 function Valores() {
   const valores = [
-    {
-      icono: '🤝',
-      titulo: 'Confianza',
-      descripcion: 'Cada médico es verificado antes de publicarse. Los pacientes merecen saber que están en manos de un profesional real.',
-    },
-    {
-      icono: '💡',
-      titulo: 'Transparencia',
-      descripcion: 'Sin costos ocultos, sin suscripciones forzadas. Precios claros para pacientes y comisiones justas para médicos.',
-    },
-    {
-      icono: '🌍',
-      titulo: 'Accesibilidad',
-      descripcion: 'La salud de calidad no debería depender de dónde vives. Las videoconsultas llevan atención médica a todo México.',
-    },
-    {
-      icono: '⚡',
-      titulo: 'Eficiencia',
-      descripcion: 'Tu tiempo vale. Agenda en minutos, recibe atención sin esperas innecesarias y lleva un historial organizado.',
-    },
+    { icono: '🤝', titulo: 'Confianza', descripcion: 'Cada médico es verificado antes de publicarse.' },
+    { icono: '💡', titulo: 'Transparencia', descripcion: 'Sin costos ocultos ni suscripciones forzadas.' },
+    { icono: '🌍', titulo: 'Accesibilidad', descripcion: 'Videoconsultas llevan salud a todo México.' },
+    { icono: '⚡', titulo: 'Eficiencia', descripcion: 'Agenda en minutos, sin esperas innecesarias.' },
   ]
-
   return (
-    <section className="py-16 px-6 bg-sky-50">
+    <section className="py-10 md:py-16 px-4 md:px-6 bg-white">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-3">Nuestros valores</h2>
-          <p className="text-gray-500
-          ">Lo que nos guía en cada decisión que tomamos</p>
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Nuestros valores</h2>
+          <p className="text-gray-500 text-sm">Lo que nos guía en cada decisión</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {valores.map((valor, i) => (
-            <div key={i} className="border border-gray-200 rounded-2xl p-6 hover:shadow-md transition text-center">
-              <div className="text-4xl mb-4">{valor.icono}</div>
-              <h3 className="font-bold text-gray-800 mb-2">{valor.titulo}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{valor.descripcion}</p>
+            <div key={i} className="border border-gray-100 rounded-2xl p-4 md:p-6 hover:shadow-md transition text-center">
+              <div className="text-3xl md:text-4xl mb-3">{valor.icono}</div>
+              <h3 className="font-bold text-gray-800 mb-1 text-sm md:text-base">{valor.titulo}</h3>
+              <p className="text-gray-500 text-xs leading-relaxed">{valor.descripcion}</p>
             </div>
           ))}
         </div>

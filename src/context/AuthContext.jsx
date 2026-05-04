@@ -38,6 +38,42 @@ export function AuthProvider({ children }) {
   { id: 4, tipo: 'sistema', titulo: 'Bienvenido a Jelfen', mensaje: 'Tu cuenta ha sido creada exitosamente. Ya puedes agendar citas con médicos verificados.', fecha: 'Hace 3 días', leida: true, icono: '🏥' },
 ])
 
+const [favoritos, setFavoritos] = useState([])
+
+const toggleFavorito = (doctorId) => {
+  setFavoritos(prev =>
+    prev.includes(doctorId)
+      ? prev.filter(id => id !== doctorId)
+      : [...prev, doctorId]
+  )
+}
+
+const esFavorito = (doctorId) => favoritos.includes(doctorId)
+
+const getMedicosFrecuentes = () => {
+  if (!usuario) return []
+
+  // Cuenta cuántas veces aparece cada doctor en citas + historial
+  const conteo = {}
+
+  const registrar = (doctorId) => {
+    if (!doctorId) return
+    conteo[doctorId] = (conteo[doctorId] || 0) + 1
+  }
+
+  usuario.citas?.forEach(c => registrar(c.doctorId))
+  usuario.historial?.forEach(h => registrar(h.doctorId))
+
+  // Ordena por frecuencia y devuelve los datos completos del doctor
+  return Object.entries(conteo)
+    .sort((a, b) => b[1] - a[1])
+    .map(([doctorId, visitas]) => ({
+      doctor: doctores.find(d => d.id === parseInt(doctorId)),
+      visitas,
+    }))
+    .filter(item => item.doctor)
+}
+
 const marcarLeida = (id) => {
   setNotificaciones(prev =>
     prev.map(n => n.id === id ? { ...n, leida: true } : n)
@@ -174,7 +210,8 @@ const agregarNotificacion = (titulo, mensaje, tipo = 'sistema', icono = '🔔') 
       calificarConsulta, agregarCita,
       cancelarCita, reprogramarCita,
       resenas, agregarResena,
-      notificaciones, marcarLeida, marcarTodasLeidas, agregarNotificacion
+      notificaciones, marcarLeida, marcarTodasLeidas, agregarNotificacion,
+      favoritos, toggleFavorito, esFavorito, getMedicosFrecuentes
     }}>
       {children}
     </AuthContext.Provider>

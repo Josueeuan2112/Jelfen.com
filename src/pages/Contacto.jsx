@@ -156,174 +156,99 @@ function Formulario() {
       setEstado('error')
     }
   }
-
-  return (
-    <section className="py-16 px-6 bg-sky-50">
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-12">
-
-        {/* Texto lateral */}
-        <div className="flex-1">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Envíanos un mensaje</h2>
-          <p className="text-gray-500 leading-relaxed mb-6">
-            Ya sea que tengas dudas como paciente, quieras unirte como médico o simplemente quieras saludarnos — estamos aquí. Tu mensaje llega directo a nuestro equipo.
-          </p>
-
-          <div className="flex flex-col gap-4 mb-8">
-            {[
-              { icono: '🩺', texto: '¿Eres médico? Te explicamos cómo unirte a Jelfen sin costo.' },
-              { icono: '🏥', texto: '¿Eres paciente? Te ayudamos a encontrar al doctor ideal.' },
-              { icono: '💡', texto: '¿Tienes una sugerencia? Nos encanta mejorar gracias a ti.' },
-            ].map((item, i) => (
-              <div key={i} className="flex gap-3 items-start bg-sky-50 rounded-xl p-4">
-                <span className="text-2xl">{item.icono}</span>
-                <p className="text-gray-600 text-sm">{item.texto}</p>
-              </div>
+return (
+  <section className="py-10 md:py-16 px-4 md:px-6 bg-white">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 md:gap-12">
+      {/* Texto lateral */}
+      <div className="flex-1">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">Envíanos un mensaje</h2>
+        <p className="text-gray-500 leading-relaxed mb-5 text-sm">
+          Ya sea que tengas dudas como paciente, quieras unirte como médico o simplemente quieras saludarnos — estamos aquí.
+        </p>
+        <div className="flex flex-col gap-3 mb-6">
+          {[
+            { icono: '🩺', texto: '¿Eres médico? Te explicamos cómo unirte a Jelfen sin costo.' },
+            { icono: '🏥', texto: '¿Eres paciente? Te ayudamos a encontrar al doctor ideal.' },
+            { icono: '💡', texto: '¿Tienes una sugerencia? Nos encanta mejorar gracias a ti.' },
+          ].map((item, i) => (
+            <div key={i} className="flex gap-3 items-start bg-sky-50 rounded-xl p-3">
+              <span className="text-xl">{item.icono}</span>
+              <p className="text-gray-600 text-sm">{item.texto}</p>
+            </div>
+          ))}
+        </div>
+        <div>
+          <p className="text-gray-500 text-sm font-semibold mb-3 uppercase tracking-wider">Síguenos en redes</p>
+          <div className="flex gap-3 flex-wrap">
+            {redes.map((red, i) => (
+              red.activo ? (
+                <a key={i} href={red.url} target="_blank" rel="noopener noreferrer" title={red.nombre}
+                  className={`w-11 h-11 rounded-xl border-2 border-gray-200 flex items-center justify-center text-gray-400 transition ${red.color}`}>
+                  {red.svg}
+                </a>
+              ) : (
+                <div key={i} title={`${red.nombre} — Próximamente`}
+                  className="w-11 h-11 rounded-xl border-2 border-gray-100 flex items-center justify-center text-gray-300 cursor-not-allowed relative group">
+                  {red.svg}
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                    Próximamente
+                  </span>
+                </div>
+              )
             ))}
           </div>
-
-          {/* Redes sociales */}
-          <div>
-            <p className="text-gray-500 text-sm font-semibold mb-3 uppercase tracking-wider">Síguenos en redes</p>
-            <div className="flex gap-3 flex-wrap">
-              {redes.map((red, i) => (
-                red.activo ? (
-                  <a
-                    key={i}
-                    href={red.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={red.nombre}
-                    className={`w-11 h-11 rounded-xl border-2 border-gray-200 flex items-center justify-center text-gray-400 transition ${red.color}`}
-                  >
-                    {red.svg}
-                  </a>
-                ) : (
-                  <div
-                    key={i}
-                    title={`${red.nombre} — Próximamente`}
-                    className="w-11 h-11 rounded-xl border-2 border-gray-100 flex items-center justify-center text-gray-300 cursor-not-allowed relative group"
-                  >
-                    {red.svg}
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
-                      Próximamente
-                    </span>
-                  </div>
-                )
-              ))}
-            </div>
-          </div>
         </div>
-
-        {/* Formulario */}
-        <div className="flex-1">
-          {estado === 'exito' ? (
-            <div className="bg-green- border-2 border-green-200 rounded-2xl p-10 text-center h-full flex flex-col items-center justify-center">
-              <div className="text-6xl mb-4">🎉</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Mensaje enviado!</h3>
-              <p className="text-gray-500 mb-6">Gracias por contactarnos. Te respondemos en menos de 24 horas.</p>
-              <button
-                onClick={() => setEstado('idle')}
-                className="bg-sky-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-sky-600 transition"
-              >
-                Enviar otro mensaje
-              </button>
-            </div>
-          ) : (
-            <form ref={formRef} onSubmit={handleSubmit} className="bg-sky-50 rounded-2xl p-8 flex flex-col gap-4 border border-sky-100">
-
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Nombre completo *</label>
-                  <input
-                    type="text"
-                    name="nombre"
-                    value={form.nombre}
-                    onChange={handleChange}
-                    placeholder="Tu nombre"
-                    required
-                    className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Teléfono</label>
-                  <input
-                    type="tel"
-                    name="telefono"
-                    value={form.telefono}
-                    onChange={handleChange}
-                    placeholder="(999) 000-0000"
-                    className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Correo electrónico *</label>
-                <input
-                  type="email"
-                  name="correo"
-                  value={form.correo}
-                  onChange={handleChange}
-                  placeholder="tucorreo@ejemplo.com"
-                  required
-                  className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Asunto *</label>
-                <select
-                  name="asunto"
-                  value={form.asunto}
-                  onChange={handleChange}
-                  required
-                  className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm text-gray-600"
-                >
-                  <option value="">Selecciona un asunto</option>
-                  {asuntos.map((a, i) => (
-                    <option key={i} value={a}>{a}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Mensaje *</label>
-                <textarea
-                  name="mensaje"
-                  value={form.mensaje}
-                  onChange={handleChange}
-                  placeholder="Escribe tu mensaje aquí..."
-                  required
-                  rows={5}
-                  className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm resize-none"
-                />
-              </div>
-
-              {estado === 'error' && (
-                <p className="text-red-500 text-sm text-center">
-                  Hubo un error al enviar. Inténtalo de nuevo o escríbenos directamente a Jelfen@outlook.es
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={estado === 'enviando'}
-                className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {estado === 'enviando' ? '⏳ Enviando...' : '✉️ Enviar Mensaje'}
-              </button>
-
-              <p className="text-gray-400 text-xs text-center">
-                * Campos obligatorios. Tu información es confidencial.
-              </p>
-
-            </form>
-          )}
-        </div>
-
       </div>
-    </section>
-  )
+
+      {/* Formulario */}
+      <div className="flex-1">
+        {estado === 'exito' ? (
+          <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-8 text-center">
+            <div className="text-5xl mb-4">🎉</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">¡Mensaje enviado!</h3>
+            <p className="text-gray-500 mb-5 text-sm">Gracias por contactarnos. Te respondemos en menos de 24 horas.</p>
+            <button onClick={() => setEstado('idle')} className="bg-sky-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-sky-600 transition">
+              Enviar otro mensaje
+            </button>
+          </div>
+        ) : (
+          <form ref={formRef} onSubmit={handleSubmit} className="bg-sky-50 rounded-2xl p-5 md:p-8 flex flex-col gap-4 border border-sky-100">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Nombre completo *</label>
+                <input type="text" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Tu nombre" required className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm" />
+              </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Teléfono</label>
+                <input type="tel" name="telefono" value={form.telefono} onChange={handleChange} placeholder="(999) 000-0000" className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Correo electrónico *</label>
+              <input type="email" name="correo" value={form.correo} onChange={handleChange} placeholder="tucorreo@ejemplo.com" required className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Asunto *</label>
+              <select name="asunto" value={form.asunto} onChange={handleChange} required className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm text-gray-600">
+                <option value="">Selecciona un asunto</option>
+                {asuntos.map((a, i) => <option key={i} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Mensaje *</label>
+              <textarea name="mensaje" value={form.mensaje} onChange={handleChange} placeholder="Escribe tu mensaje aquí..." required rows={4} className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 focus:outline-none focus:border-sky-400 text-sm resize-none" />
+            </div>
+            {estado === 'error' && <p className="text-red-500 text-sm text-center">Error al enviar. Escríbenos a Jelfen@outlook.es</p>}
+            <button type="submit" disabled={estado === 'enviando'} className="w-full bg-sky-500 text-white py-3 rounded-xl font-semibold hover:bg-sky-600 transition disabled:opacity-50">
+              {estado === 'enviando' ? '⏳ Enviando...' : '✉️ Enviar Mensaje'}
+            </button>
+            <p className="text-gray-400 text-xs text-center">* Campos obligatorios. Tu información es confidencial.</p>
+          </form>
+        )}
+      </div>
+    </div>
+  </section>
+)
 }
 
 // --- PÁGINA COMPLETA ---

@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+/* ── MOBILE BASE ── */
+* { -webkit-tap-highlight-color: transparent; }
+
+html { scroll-behavior: smooth; }
+
+/* Evita scroll horizontal en mobile */
+body { overflow-x: hidden; }
+
+/* Inputs más grandes en mobile para evitar zoom */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
