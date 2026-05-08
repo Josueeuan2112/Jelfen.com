@@ -91,7 +91,7 @@ export const doctores = [
     resenas: 95,
     precio: 500,
     experiencia: 10,
-    imagen: 'https://pbs.twimg.com/media/EyoRnPLW8A4Vr8s.jpg',
+    imagen: 'https://www.shutterstock.com/image-photo/portrait-smiling-doctor-isolated-on-600nw-2473504357.jpg',
     biografia: 'Dermatólogo con especialidad en dermatología clínica y estética. Experto en tratamiento de acné, psoriasis y procedimientos estéticos mínimamente invasivos.',
     servicios: ['Consulta general', 'Videoconsulta', 'Procedimientos estéticos', 'Seguimiento'],
     idiomas: ['Español', 'Inglés'],

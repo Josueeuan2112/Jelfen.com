@@ -280,10 +280,7 @@ function PasoExito({ doctor, tipo, fecha, hora, onCerrar }) {
   })
 
   return (
-    <div className="text-center py-4">
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-        🎉
-      </div>
+    <div className="bg-sky-50 text-center py-4">
       <h3 className="text-2xl font-bold text-gray-800 mb-2">¡Cita confirmada!</h3>
       <p className="text-gray-500 mb-6">Te enviamos los detalles a tu correo</p>
 
@@ -318,7 +315,7 @@ function PasoExito({ doctor, tipo, fecha, hora, onCerrar }) {
       {tipo === 'videoconsulta' && (
         <div className="bg-blue-50 rounded-2xl p-4 text-left border border-blue-100 mb-4">
           <p className="text-blue-700 text-sm font-semibold mb-1">💻 ¿Cómo funciona tu videoconsulta?</p>
-          <p className="text-blue-600 text-xs">El médico te enviará el enlace de la videollamada 30 minutos antes de tu cita al correo registrado.</p>
+          <p className="text-blue-600 text-xs">El médico te enviará el codigo de la videollamada 30 minutos antes de tu cita al correo registrado.</p>
         </div>
       )}
 
@@ -371,7 +368,7 @@ function ModalCita({ doctor, onCerrar }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div className="bg-sky-50 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
         <div className="bg-sky-50 px-6 pt-6 pb-4 border-b border-sky-100">

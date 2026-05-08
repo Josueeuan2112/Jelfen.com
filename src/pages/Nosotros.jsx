@@ -43,7 +43,7 @@ function Estadisticas() {
     { numero: '48 hrs', label: 'Verificación máx.' },
   ]
   return (
-    <section className="bg-white py-10 md:py-16 px-4 md:px-6">
+    <section className="bg-sky-50 py-10 md:py-16 px-4 md:px-6">
       <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <div key={i} className="text-center">
@@ -212,7 +212,7 @@ function Valores() {
     { icono: '⚡', titulo: 'Eficiencia', descripcion: 'Agenda en minutos, sin esperas innecesarias.' },
   ]
   return (
-    <section className="py-10 md:py-16 px-4 md:px-6 bg-white">
+    <section className="py-10 md:py-16 px-4 md:px-6 bg-sky-50">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Nuestros valores</h2>

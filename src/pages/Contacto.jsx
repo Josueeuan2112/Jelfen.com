@@ -157,7 +157,7 @@ function Formulario() {
     }
   }
 return (
-  <section className="py-10 md:py-16 px-4 md:px-6 bg-white">
+  <section className="py-10 md:py-16 px-4 md:px-6 bg-sky-50">
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 md:gap-12">
       {/* Texto lateral */}
       <div className="flex-1">

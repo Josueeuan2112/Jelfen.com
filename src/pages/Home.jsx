@@ -117,7 +117,7 @@ function DoctoresDestacados() {
   const doctoresOrdenados = [...doctores].sort((a, b) => b.calificacion - a.calificacion)
 
   return (
-    <section className="py-10 md:py-16 px-4 md:px-6 bg-white">
+    <section className="py-10 md:py-16 px-4 md:px-6 bg-sky-50">
       {doctorSeleccionado && <ModalCita doctor={doctorSeleccionado} onCerrar={() => setDoctorSeleccionado(null)} />}
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
